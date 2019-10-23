@@ -1,0 +1,37 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29409.12
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Server", "Server\Server.csproj", "{F2B3DDAD-DF8F-423B-83B2-CE3A868002EC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Client", "Client\Client.csproj", "{4F92ED6B-D0AE-48F1-83A9-507AAF04F163}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Interfaces", "Interfaces\Interfaces.csproj", "{D5D43A3C-E3CC-41B4-AAF1-8A31EB667CF3}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F2B3DDAD-DF8F-423B-83B2-CE3A868002EC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F2B3DDAD-DF8F-423B-83B2-CE3A868002EC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F2B3DDAD-DF8F-423B-83B2-CE3A868002EC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F2B3DDAD-DF8F-423B-83B2-CE3A868002EC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4F92ED6B-D0AE-48F1-83A9-507AAF04F163}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4F92ED6B-D0AE-48F1-83A9-507AAF04F163}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4F92ED6B-D0AE-48F1-83A9-507AAF04F163}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4F92ED6B-D0AE-48F1-83A9-507AAF04F163}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D5D43A3C-E3CC-41B4-AAF1-8A31EB667CF3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D5D43A3C-E3CC-41B4-AAF1-8A31EB667CF3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D5D43A3C-E3CC-41B4-AAF1-8A31EB667CF3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D5D43A3C-E3CC-41B4-AAF1-8A31EB667CF3}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {2C3D69AE-15E3-4240-B19D-444C201EF023}
+	EndGlobalSection
+EndGlobal
