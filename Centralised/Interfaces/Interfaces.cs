@@ -6,5 +6,15 @@ using System.Threading.Tasks;
 
 namespace Interfaces
 {
+	public interface IClient
+	{
+		//print to screen or update textbox
+		void ListMeetings();
 
+		void CreateMeeting(string meeting_topic, int min_attendees, int number_of_slots, int number_of_invitees, List<string> slots, List<string> invitees);
+
+		void JoinMeeting(string meeting_topic);
+
+		void CloseMeeting(string meeting_topic);
+	}
 }
