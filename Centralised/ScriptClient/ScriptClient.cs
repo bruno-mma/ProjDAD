@@ -4,18 +4,16 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Server
+namespace ScriptClient
 {
 	public class Program
 	{
 		static void Main(string[] args)
 		{
-			Server server = new Server();
 		}
 	}
 
-
-	public class Server
+	public class ScriptClient
 	{
 
 	}
