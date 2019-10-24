@@ -19,4 +19,9 @@ namespace Client
 			Application.Run(new ClientForm());
 		}
 	}
+
+	public class Client
+	{
+
+	}
 }
