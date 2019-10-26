@@ -41,7 +41,7 @@ namespace Client
 			throw new NotImplementedException();
 		}
 
-		public void JoinMeeting(string meeting_topic)
+		public void JoinMeeting(string meeting_topic, int slotcount, List<string> slots)
 		{
 			throw new NotImplementedException();
 		}
