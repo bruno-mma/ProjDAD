@@ -17,6 +17,7 @@ namespace Server
 
 	public class Server
 	{
-
+		//key is meeting topic
+		private Dictionary<string, Meeting> _meetings = new Dictionary<string, Meeting>();
 	}
 }

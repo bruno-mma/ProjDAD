@@ -17,4 +17,9 @@ namespace Interfaces
 
 		void CloseMeeting(string meeting_topic);
 	}
+
+	public interface IMeeting
+	{
+
+	}
 }

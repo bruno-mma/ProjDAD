@@ -26,6 +26,10 @@ namespace Client
 	{
 		private string _name;
 
+		private Dictionary<string, IMeeting> _knownMeetings = new Dictionary<string, IMeeting>();
+
+
+
 		public Client(string name)
 		{
 			_name = name;
