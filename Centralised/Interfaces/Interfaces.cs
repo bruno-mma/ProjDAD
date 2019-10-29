@@ -3,23 +3,21 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Shared.Meeting;
 
-namespace Interfaces
+namespace Shared
 {
-	public interface IClient
+	public interface IServer
 	{
-		//print to screen or update textbox
-		void ListMeetings();
+		void CreateMeeting(string owner_name, string meeting_topic, int min_attendees, int number_of_slots, int number_of_invitees, List<string> slots, List<string> invitees);
 
-		void CreateMeeting(string meeting_topic, int min_attendees, int number_of_slots, int number_of_invitees, List<string> slots, List<string> invitees);
+		void JoinMeeting(string client_name, string meeting_topic, int slot_count, List<string> slots);
 
-		void JoinMeeting(string meeting_topic, int slot_count, List<string> slots);
-
-		void CloseMeeting(string meeting_topic);
+		void CloseMeeting(string client_name, string meeting_topic);
 	}
 
-	public interface IMeeting
+	public interface IClient
 	{
-
+		void UpdateMeeting(string meeting_topic, Meeting meeting, MeetingData meetingData);
 	}
 }

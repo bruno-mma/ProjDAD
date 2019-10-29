@@ -1,4 +1,4 @@
-﻿using Interfaces;
+﻿using Shared;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -26,31 +26,14 @@ namespace Client
 	{
 		private string _name;
 
-		private Dictionary<string, IMeeting> _knownMeetings = new Dictionary<string, IMeeting>();
-
-
+		private Dictionary<string, MeetingData> _knownMeetings = new Dictionary<string, MeetingData>();
 
 		public Client(string name)
 		{
 			_name = name;
 		}
 
-		public void CloseMeeting(string meeting_topic)
-		{
-			throw new NotImplementedException();
-		}
-
-		public void CreateMeeting(string meeting_topic, int min_attendees, int number_of_slots, int number_of_invitees, List<string> slots, List<string> invitees)
-		{
-			throw new NotImplementedException();
-		}
-
-		public void JoinMeeting(string meeting_topic, int slotcount, List<string> slots)
-		{
-			throw new NotImplementedException();
-		}
-
-		public void ListMeetings()
+		public void UpdateMeeting(string meeting_topic, Meeting meeting, MeetingData meetingData)
 		{
 			throw new NotImplementedException();
 		}
