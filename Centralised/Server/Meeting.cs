@@ -9,33 +9,35 @@ namespace Server
 {
 	class Meeting : IMeeting
 	{
-		string _meetingTopic;
+		private MeetingData _meetingData;
 
-		int _minAttendees;
-		int _numberOfSlots;
-		int _numberOfInvitees;
+		public string MeetingTopic { get => this._meetingData._meetingTopic; set => this._meetingData._meetingTopic = value; }
 
-		List<string> _slots;
-		List<string> _invitees;
+		public int MinAttendees { get => this._meetingData._minAttendees; set => this._meetingData._minAttendees = value; }
+		public int NumberOfSlots { get => this._meetingData._numberOfSlots; set => this._meetingData._numberOfSlots = value; }
+		public int NumberOfInvitees { get => this._meetingData._numberOfInvitees; set => this._meetingData._numberOfInvitees = value; }
 
-		bool _closed;
+		public List<string> Slots { get => this._meetingData._slots; set => this._meetingData._slots = value; }
+		public List<string> Invitees { get => this._meetingData._invitees; set => this._meetingData._invitees = value; }
 
-		//Subset of dates/location where a user is available, ex. “Maria, (2019-11-15, Porto)”
-		List<string> _meetingRecords;
+		public bool Closed { get => this._meetingData._closed; set => this._meetingData._closed = value; }
+
+		public List<string> MeetingRecords { get => this._meetingData._meetingRecords; set => this._meetingData._meetingRecords = value; }
+
 
 		public Meeting(string meeting_topic, int min_attendees, int number_of_slots, int number_of_invitees, List<string> slots, List<string> invitees)
 		{
-			_meetingTopic = meeting_topic;
-			_minAttendees = min_attendees;
+			MeetingTopic = meeting_topic;
+			MinAttendees = min_attendees;
 
-			_numberOfSlots = number_of_slots;
-			_numberOfInvitees = number_of_invitees;
+			NumberOfSlots = number_of_slots;
+			NumberOfInvitees = number_of_invitees;
 
-			_slots = slots;
-			_invitees = invitees;
+			Slots = slots;
+			Invitees = invitees;
 
-			_closed = false;
-			_meetingRecords = new List<string>();
+			Closed = false;
+			MeetingRecords = new List<string>();
 		}
 	}
 }
