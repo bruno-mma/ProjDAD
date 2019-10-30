@@ -41,7 +41,7 @@ namespace Interfaces
 
 		public MeetingData()
 		{
-
+			//empty constructor is still needed
 		}
 	}
 }
