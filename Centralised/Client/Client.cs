@@ -1,4 +1,4 @@
-﻿using Shared;
+﻿using Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -33,7 +33,7 @@ namespace Client
 			_name = name;
 		}
 
-		public void UpdateMeeting(string meeting_topic, Meeting meeting, MeetingData meetingData)
+		public void UpdateMeeting(string meeting_topic, IMeeting meeting, MeetingData meetingData)
 		{
 			throw new NotImplementedException();
 		}

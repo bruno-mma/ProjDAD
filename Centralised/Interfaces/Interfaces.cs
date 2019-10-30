@@ -3,9 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Shared.Meeting;
 
-namespace Shared
+namespace Interfaces
 {
 	public interface IServer
 	{
@@ -18,6 +17,11 @@ namespace Shared
 
 	public interface IClient
 	{
-		void UpdateMeeting(string meeting_topic, Meeting meeting, MeetingData meetingData);
+		void UpdateMeeting(string meeting_topic, IMeeting meeting, MeetingData meetingData);
+	}
+
+	public interface IMeeting
+	{
+
 	}
 }

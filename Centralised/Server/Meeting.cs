@@ -1,4 +1,4 @@
-﻿using Shared;
+﻿using Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Server
 {
-	class Meeting
+	class Meeting : IMeeting
 	{
 		string _meetingTopic;
 
