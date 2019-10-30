@@ -27,6 +27,8 @@ namespace Client
 
 	public class Client : MarshalByRefObject, IClient
 	{
+		private readonly static int _initial_port = 9000;
+
 		private readonly ClientForm _form;
 		private string _name;
 		private IServer _server;
@@ -42,10 +44,23 @@ namespace Client
 		public void Connect(string name)
 		{
 			//for now
-			int port = 9000;
+			int port = _initial_port;
+			bool open_port_found = false;
 
-			TcpChannel channel = new TcpChannel(port);
-			ChannelServices.RegisterChannel(channel, false);
+			while(!open_port_found)
+			{
+				try
+				{
+					TcpChannel channel = new TcpChannel(port);
+					ChannelServices.RegisterChannel(channel, false);
+					open_port_found = true;
+				}
+				catch (System.Net.Sockets.SocketException)
+				{
+					port++;
+				}
+			}
+
 
 			//get remote server object
 			IServer server = (IServer)Activator.GetObject(typeof(IServer), "tcp://localhost:8080/Server");

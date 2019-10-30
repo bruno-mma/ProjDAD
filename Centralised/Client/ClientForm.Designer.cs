@@ -57,7 +57,7 @@
 			this.Controls.Add(this.ConnectButton);
 			this.Controls.Add(this.NameTextBox);
 			this.Name = "ClientForm";
-			this.Text = "Form1";
+			this.Text = "Calendar";
 			this.ResumeLayout(false);
 			this.PerformLayout();
 
