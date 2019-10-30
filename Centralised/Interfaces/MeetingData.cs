@@ -38,5 +38,10 @@ namespace Interfaces
 			_closed = false;
 			_meetingRecords = new List<string>();
 		}
+
+		public MeetingData()
+		{
+
+		}
 	}
 }

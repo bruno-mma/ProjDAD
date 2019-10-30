@@ -27,6 +27,8 @@ namespace Server
 
 		public Meeting(string meeting_topic, int min_attendees, int number_of_slots, int number_of_invitees, List<string> slots, List<string> invitees)
 		{
+			this._meetingData = new MeetingData();
+
 			MeetingTopic = meeting_topic;
 			MinAttendees = min_attendees;
 
