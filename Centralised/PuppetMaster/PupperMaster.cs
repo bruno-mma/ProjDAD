@@ -5,36 +5,27 @@ using System.Text;
 using System.IO;
 using System.Threading.Tasks;
 
-namespace PuppetMaster
-{
-    class Program
-    {
-        static void Main()
-        {
-            if (File.Exists("configFile.txt"))
-            {
-                try
-                {
-                    string[] configFileContents = File.ReadAllLines("configFile.txt");
+namespace PuppetMaster {
 
-                    // TODO: make the puppet master execute the commands
-                    // for now it just prints them
-                    foreach (var item in configFileContents)
-                    {
-                        Console.WriteLine(item);
-                    }
-                    Console.ReadLine();
+    class Program {
+    
+        static void Main() {
+        
+            try {
+                // File needs to be inside ...\PupperMaster\bin\Debug
+                // TODO: find how to give the file path without having to be an absolute path
+                string[] configFileContents = File.ReadAllLines("configFile.txt");
+
+                foreach (var item in configFileContents) {
+                    // TODO: execute command
                 }
-            
-                catch (IOException e) {
-                    Console.WriteLine(e);
-                }
+                Console.ReadLine();
             }
-
-            else
-            {
-                while (true)
-                {
+            
+            catch (FileNotFoundException) {
+                Console.WriteLine("No configuration file provided. Reading commands from console");
+                    
+                while (true) {
                     string command = Console.ReadLine();
                     // TODO: execute command
                 }
@@ -42,11 +33,14 @@ namespace PuppetMaster
         }
     }
 
-    public class PuppetMaster
-    {
-        public PuppetMaster ()
-        {
+    public class PuppetMaster {
+        // just as an example
+        private readonly List<string> _availablePCSs = new List<string> {
+            "tcp://URL:10000", 
+            "tcp://URL2:10000" 
+        };
 
+        public PuppetMaster () {
         }
     }
 }
