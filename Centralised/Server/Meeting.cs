@@ -7,9 +7,11 @@ using System.Threading.Tasks;
 
 namespace Server
 {
-	class Meeting : IMeeting
-	{
-		private MeetingData _meetingData;
+    class Meeting : IMeeting
+    {
+        private MeetingData _meetingData;
+
+        public string MeetingOwner { get => this._meetingData._meetingOwner; set => this._meetingData._meetingOwner = value; }
 
 		public string MeetingTopic { get => this._meetingData._meetingTopic; set => this._meetingData._meetingTopic = value; }
 
@@ -25,11 +27,13 @@ namespace Server
 		public List<string> MeetingRecords { get => this._meetingData._meetingRecords; set => this._meetingData._meetingRecords = value; }
 
 
-		public Meeting(string meeting_topic, int min_attendees, int number_of_slots, int number_of_invitees, List<string> slots, List<string> invitees)
+		public Meeting(string meeting_topic, string meeting_owner, int min_attendees, int number_of_slots, int number_of_invitees, List<string> slots, List<string> invitees)
 		{
 			this._meetingData = new MeetingData();
 
 			MeetingTopic = meeting_topic;
+            MeetingOwner = meeting_owner;
+
 			MinAttendees = min_attendees;
 
 			NumberOfSlots = number_of_slots;

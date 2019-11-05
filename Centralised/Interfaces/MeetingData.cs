@@ -11,6 +11,8 @@ namespace Interfaces
 	{
 		public string _meetingTopic;
 
+        public string _meetingOwner;
+
 		public int _minAttendees;
 		public int _numberOfSlots;
 		public int _numberOfInvitees;
@@ -24,11 +26,13 @@ namespace Interfaces
 		public List<string> _meetingRecords;
 
 
-		public MeetingData(string meeting_topic, int min_attendees, int number_of_slots, int number_of_invitees, List<string> slots, List<string> invitees)
+		public MeetingData(string meeting_topic, string meetingOwner, int min_attendees, int number_of_slots, int number_of_invitees, List<string> slots, List<string> invitees)
 		{
 			_meetingTopic = meeting_topic;
-			_minAttendees = min_attendees;
 
+            _meetingOwner = meetingOwner;
+
+			_minAttendees = min_attendees;
 			_numberOfSlots = number_of_slots;
 			_numberOfInvitees = number_of_invitees;
 

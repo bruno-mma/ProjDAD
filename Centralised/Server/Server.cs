@@ -26,7 +26,6 @@ namespace Server
 		}
 	}
 
-
 	public class Server : MarshalByRefObject, IServer
 	{
 		//key is meeting topic
@@ -61,7 +60,8 @@ namespace Server
 
 		public void CreateMeeting(string owner_name, string meeting_topic, int min_attendees, int number_of_slots, int number_of_invitees, List<string> slots, List<string> invitees)
 		{
-			throw new NotImplementedException();
+            Meeting meeting = new Meeting(meeting_topic, owner_name, min_attendees, number_of_slots, number_of_invitees, slots, invitees);
+            _meetings.Add(meeting_topic, meeting);
 		}
 
 		public void JoinMeeting(string client_name, string meeting_topic, int slot_count, List<string> slots)
