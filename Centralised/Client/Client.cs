@@ -1,81 +1,81 @@
 ﻿using Interfaces;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.Remoting;
 using System.Runtime.Remoting.Channels;
 using System.Runtime.Remoting.Channels.Tcp;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Client
 {
-    public class Program
-    {
-        static void Main(string[] args)
-        {
-            Client client = new Client();
-            client.Connect("client");
-            Console.ReadLine();
-        }
-    }
+	public class Program
+	{
+		static void Main(string[] args)
+		{
+			Client client = new Client();
+			ClientParser parser = new ClientParser(client);
 
-    public class Client : MarshalByRefObject, IClient
-    {
-        private readonly static int _initial_port = 9000;
+			while (true)
+			{
+				parser.Parse(Console.ReadLine());
+			}
+		}
+	}
 
-        private string _name;
-        private IServer _server;
+	public class Client : MarshalByRefObject, IClient
+	{
+		private readonly static int _initialPort = 9000;
 
-        private Dictionary<string, MeetingData> _knownMeetings = new Dictionary<string, MeetingData>();
+		private string _name;
+		private IServer _server;
 
-        public Client()
-        {
-        }
+		private Dictionary<string, MeetingData> _knownMeetings = new Dictionary<string, MeetingData>();
 
-        public void Connect(string name)
-        {
-            //for now
-            int port = _initial_port;
-            bool open_port_found = false;
+		public Client()
+		{
+		}
 
-            while (!open_port_found)
-            {
-                try
-                {
-                    TcpChannel channel = new TcpChannel(port);
-                    ChannelServices.RegisterChannel(channel, false);
-                    open_port_found = true;
-                }
-                catch (System.Net.Sockets.SocketException)
-                {
-                    port++;
-                }
-            }
+		public void Connect(string name)
+		{
+			int port = _initialPort;
+			bool open_port_found = false;
+
+			while (!open_port_found)
+			{
+				try
+				{
+					TcpChannel channel = new TcpChannel(port);
+					ChannelServices.RegisterChannel(channel, false);
+					open_port_found = true;
+				}
+				catch (System.Net.Sockets.SocketException)
+				{
+					port++;
+				}
+			}
 
 
-            //get remote server object
-            IServer server = (IServer)Activator.GetObject(typeof(IServer), "tcp://localhost:8080/Server");
+			//get remote server object
+			IServer server = (IServer)Activator.GetObject(typeof(IServer), "tcp://localhost:8080/Server");
 
-            this._name = name;
+			this._name = name;
 
-            //weak check
-            if (server == null)
-            {
-                Console.WriteLine("Could not locate server");
-                return;
-            }
+			//weak check
+			if (server == null)
+			{
+				Console.WriteLine("Could not locate server");
+				return;
+			}
 
-            _server = server;
+			_server = server;
 
-            //publish remote client object
-            RemotingServices.Marshal(this, name, typeof(IClient));
+			//publish remote client object
+			RemotingServices.Marshal(this, name, typeof(IClient));
 
-            server.AddClient(name, port);
-        }
+			server.AddClient(name, port);
+		}
 
-        public void UpdateMeeting(string meeting_topic, MeetingData meetingData)
-        {
-        }
-    }
+		public void UpdateMeeting(string meeting_topic, MeetingData meetingData)
+		{
+		}
+	}
 }
