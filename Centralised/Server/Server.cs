@@ -61,13 +61,34 @@ namespace Server
 		public void CreateMeeting(string owner_name, string meeting_topic, int min_attendees, int number_of_slots, int number_of_invitees, List<string> slots, List<string> invitees)
 		{
             Meeting meeting = new Meeting(meeting_topic, owner_name, min_attendees, number_of_slots, number_of_invitees, slots, invitees);
+            MeetingData meetingData = new MeetingData(meeting_topic, owner_name, min_attendees, number_of_slots, number_of_invitees, slots, invitees);
             _meetings.Add(meeting_topic, meeting);
+
+            // supposing number_of_invitees is 0 if there are no invitees (invitees list is empty)
+            // TODO: move code to function that sends to all involved clients
+            if (number_of_invitees == 0)
+            {
+                foreach (var client in _clients)
+                {
+                    client.Value.UpdateMeeting(meetingData._meetingTopic, meetingData);
+                }
+            }
+
+            else
+            {
+                foreach (var client in invitees)
+                {
+                    if (_clients.ContainsKey(client))
+                    {
+                        _clients[client].UpdateMeeting(meetingData._meetingTopic, meetingData);
+                    }
+                }
+            }
 		}
 
 		public void JoinMeeting(string client_name, string meeting_topic, int slot_count, List<string> slots)
 		{
 			throw new NotImplementedException();
 		}
-
 	}
 }

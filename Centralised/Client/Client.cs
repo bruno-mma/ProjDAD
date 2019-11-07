@@ -14,6 +14,9 @@ namespace Client
     {
         static void Main(string[] args)
         {
+            Client client = new Client();
+            client.Connect("client");
+            Console.ReadLine();
         }
     }
 
@@ -71,9 +74,8 @@ namespace Client
             server.AddClient(name, port);
         }
 
-        public void UpdateMeeting(string meeting_topic, IMeeting meeting, MeetingData meetingData)
+        public void UpdateMeeting(string meeting_topic, MeetingData meetingData)
         {
-            throw new NotImplementedException();
         }
     }
 }

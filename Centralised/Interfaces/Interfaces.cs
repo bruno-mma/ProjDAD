@@ -19,7 +19,7 @@ namespace Interfaces
 
 	public interface IClient
 	{
-		void UpdateMeeting(string meeting_topic, IMeeting meeting, MeetingData meetingData);
+		void UpdateMeeting(string meeting_topic, MeetingData meetingData);
 	}
 
 	public interface IMeeting
