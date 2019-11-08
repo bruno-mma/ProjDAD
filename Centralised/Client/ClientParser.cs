@@ -49,6 +49,10 @@ namespace Client
 					Join(arguments);
 					break;
 
+				case "list":
+					List();
+					break;
+
 
 				default:
 					Console.WriteLine("Error: " + arguments[0] + " command not found");
@@ -110,7 +114,7 @@ namespace Client
 		{
 			if (WrongArgumentCount(arguments, 3)) return;
 
-			int number_of_slots = Int32.Parse(arguments[3]);
+			int number_of_slots = Int32.Parse(arguments[2]);
 
 			//correct number of arguments counting with the number of slots and invitees
 			if (WrongArgumentCount(arguments, 2 + number_of_slots)) return;
@@ -120,5 +124,9 @@ namespace Client
 			_client.Join(arguments[1], number_of_slots, slots);
 		}
 
+		private void List()
+		{
+			_client.List();
+		}
 	}
 }

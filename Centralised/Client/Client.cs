@@ -34,6 +34,13 @@ namespace Client
 		{
 		}
 
+		public override object InitializeLifetimeService()
+		{
+
+			return null;
+
+		}
+
 		public void Connect(string name)
 		{
 			int port = _initialPort;
@@ -78,6 +85,23 @@ namespace Client
 		{
 			//(Distributed version) Aditional logic will needed to determine if this meeting data is actualy more recent than the one already saved
 			_knownMeetings[meeting_topic] = meetingData;
+
+			string slots = "asdasasd ";
+
+			foreach (KeyValuePair<string, List<string>> kvp in meetingData._meetingRecords)
+			{
+				string slot = kvp.Key;
+				List<string> users = kvp.Value;
+
+				slots += slot + ": ";
+
+				foreach (string user in users)
+				{
+					slots += user + " ";
+				}
+
+				slots += Environment.NewLine;
+			}
 		}
 
 		public void CreateMeeting(string meeting_topic, int min_attendees, int number_of_slots, int number_of_invitees, List<string> slots, List<string> invitees)
@@ -131,6 +155,50 @@ namespace Client
 			else
 			{
 				Console.WriteLine("Error: Cannot join meeting");
+			}
+		}
+
+		public void List()
+		{
+			foreach (MeetingData meetingData in _knownMeetings.Values)
+			{
+				Console.WriteLine("Meeting topic: " + meetingData._meetingTopic + ", coordinator: " + meetingData._meetingOwner);
+				Console.WriteLine(meetingData._minAttendees + " minimum attendees, " + meetingData._numberOfSlots + " slots.");
+
+				if (meetingData._numberOfInvitees > 0)
+				{
+					Console.WriteLine(meetingData._numberOfInvitees + " invitees:");
+
+					string invitees = "";
+
+					foreach (string invitee in meetingData._invitees)
+					{
+						invitees += invitee;
+					}
+
+					Console.WriteLine(invitees);
+				}
+
+				Console.WriteLine("Slots:");
+
+				string slots = "";
+
+				foreach (KeyValuePair<string, List<string>> kvp in meetingData._meetingRecords)
+				{
+					string slot = kvp.Key;
+					List<string> users = kvp.Value;
+
+					slots += slot + ": ";
+
+					foreach (string user in users)
+					{
+						slots += user + " ";
+					}
+
+					slots += Environment.NewLine;
+				}
+
+				Console.WriteLine(slots);
 			}
 		}
 	}
