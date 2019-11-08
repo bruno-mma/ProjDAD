@@ -77,5 +77,10 @@ namespace Client
 		public void UpdateMeeting(string meeting_topic, MeetingData meetingData)
 		{
 		}
+
+		public void CreateMeeting(string meeting_topic, int min_attendees, int number_of_slots, int number_of_invitees, List<string> slots, List<string> invitees)
+		{
+			_server.CreateMeeting(_name, meeting_topic, min_attendees, number_of_slots, number_of_invitees, slots, invitees);
+		}
 	}
 }

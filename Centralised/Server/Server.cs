@@ -61,16 +61,35 @@ namespace Server
 		public void CreateMeeting(string owner_name, string meeting_topic, int min_attendees, int number_of_slots, int number_of_invitees, List<string> slots, List<string> invitees)
 		{
             Meeting meeting = new Meeting(meeting_topic, owner_name, min_attendees, number_of_slots, number_of_invitees, slots, invitees);
-            MeetingData meetingData = new MeetingData(meeting_topic, owner_name, min_attendees, number_of_slots, number_of_invitees, slots, invitees);
+            //MeetingData meetingData = new MeetingData(meeting_topic, owner_name, min_attendees, number_of_slots, number_of_invitees, slots, invitees);
             _meetings.Add(meeting_topic, meeting);
 
-            // supposing number_of_invitees is 0 if there are no invitees (invitees list is empty)
-            // TODO: move code to function that sends to all involved clients
-            if (number_of_invitees == 0)
+			string print = "Client " + owner_name + " created a meeting with topic: " + meeting_topic + ", with " + min_attendees + " required atendees, with slots: ";
+
+			foreach (string slot in slots)
+			{
+				print += slot + " ";
+			}
+
+			if (number_of_invitees < 0)
+			{
+				print += "and invitees: ";
+
+				foreach (string invitee in invitees)
+				{
+					print += invitee + " ";
+				}
+			}
+
+			Console.WriteLine(print);
+
+			// supposing number_of_invitees is 0 if there are no invitees (invitees list is empty)
+			// TODO: move code to function that sends to all involved clients
+			if (number_of_invitees == 0)
             {
                 foreach (var client in _clients)
                 {
-                    client.Value.UpdateMeeting(meetingData._meetingTopic, meetingData);
+                    client.Value.UpdateMeeting(meeting.MeetingTopic, meeting._meetingData);
                 }
             }
 
@@ -80,8 +99,8 @@ namespace Server
                 {
                     if (_clients.ContainsKey(client))
                     {
-                        _clients[client].UpdateMeeting(meetingData._meetingTopic, meetingData);
-                    }
+                        _clients[client].UpdateMeeting(meeting.MeetingTopic, meeting._meetingData);
+					}
                 }
             }
 		}

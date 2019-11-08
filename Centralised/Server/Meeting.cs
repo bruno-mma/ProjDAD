@@ -9,7 +9,7 @@ namespace Server
 {
     class Meeting : IMeeting
     {
-        private MeetingData _meetingData;
+        public MeetingData _meetingData;
 
         public string MeetingOwner { get => this._meetingData._meetingOwner; set => this._meetingData._meetingOwner = value; }
 
