@@ -34,8 +34,11 @@ namespace Server
 		//key is client name
 		private Dictionary<string, IClient> _clients = new Dictionary<string, IClient>();
 
+		//occupied slots (with closed meetings), key is slot string, Ex: "Lisboa,2020-01-02"
+		private Dictionary<string, Meeting> _slots = new Dictionary<string, Meeting>();
 
-		public void AddClient(string client_name, int port)
+
+		public bool AddClient(string client_name, int port)
 		{
 			IClient client = (IClient)Activator.GetObject(typeof(IClient), "tcp://localhost:" + port + "/" + client_name);
 
@@ -43,6 +46,7 @@ namespace Server
 			if (client == null)
 			{
 				Console.WriteLine("Could not locate client" + client_name);
+				return false;
 			}
 
 			else
@@ -50,18 +54,40 @@ namespace Server
 				Console.WriteLine("Adding client: " + client_name + ", on port: " + port);
 				_clients.Add(client_name, client);
 			}
+
+			return true;
+		}
+		private void UpdateMeetingInvolvedClients(Meeting meeting)
+		{
+			if (meeting.NumberOfInvitees == 0)
+			{
+				foreach (IClient client in _clients.Values)
+				{
+					client.UpdateMeeting(meeting.MeetingTopic, meeting._meetingData);
+				}
+			}
+			else
+			{
+				foreach (string client_name in meeting.Invitees)
+				{
+					if (_clients.ContainsKey(client_name))
+					{
+						_clients[client_name].UpdateMeeting(meeting.MeetingTopic, meeting._meetingData);
+					}
+				}
+			}
 		}
 
 
-		public void CloseMeeting(string client_name, string meeting_topic)
+		public bool CloseMeeting(string client_name, string meeting_topic)
 		{
 			throw new NotImplementedException();
 		}
 
-		public void CreateMeeting(string owner_name, string meeting_topic, int min_attendees, int number_of_slots, int number_of_invitees, List<string> slots, List<string> invitees)
+		public bool CreateMeeting(string owner_name, string meeting_topic, int min_attendees, int number_of_slots, int number_of_invitees, List<string> slots, List<string> invitees)
 		{
             Meeting meeting = new Meeting(meeting_topic, owner_name, min_attendees, number_of_slots, number_of_invitees, slots, invitees);
-            //MeetingData meetingData = new MeetingData(meeting_topic, owner_name, min_attendees, number_of_slots, number_of_invitees, slots, invitees);
+
             _meetings.Add(meeting_topic, meeting);
 
 			string print = "Client " + owner_name + " created a meeting with topic: " + meeting_topic + ", with " + min_attendees + " required atendees, with slots: ";
@@ -83,31 +109,57 @@ namespace Server
 
 			Console.WriteLine(print);
 
-			// supposing number_of_invitees is 0 if there are no invitees (invitees list is empty)
-			// TODO: move code to function that sends to all involved clients
-			if (number_of_invitees == 0)
-            {
-                foreach (var client in _clients)
-                {
-                    client.Value.UpdateMeeting(meeting.MeetingTopic, meeting._meetingData);
-                }
-            }
+			UpdateMeetingInvolvedClients(meeting);
 
-            else
-            {
-                foreach (var client in invitees)
-                {
-                    if (_clients.ContainsKey(client))
-                    {
-                        _clients[client].UpdateMeeting(meeting.MeetingTopic, meeting._meetingData);
-					}
-                }
-            }
+			return true;
 		}
 
-		public void JoinMeeting(string client_name, string meeting_topic, int slot_count, List<string> slots)
+		public bool JoinMeeting(string client_name, string meeting_topic, int slot_count, List<string> slots)
 		{
-			throw new NotImplementedException();
+			//if meeting does not exist, user cannot join
+			if (!_meetings.ContainsKey(meeting_topic))
+			{
+				return false;
+			}
+
+			Meeting meeting = _meetings[meeting_topic];
+
+			//if meeting is closed, user cannot join
+			if (meeting.Closed)
+			{
+				return false;
+			}
+
+			//if meeting is invitees only, and user is not invited, user cannot join
+			if (meeting.NumberOfInvitees > 0 && !meeting.Invitees.Contains(client_name))
+			{
+				return false;
+			}
+
+			bool joined = false;
+
+			foreach (string slot in slots)
+			{
+				// add user into users interested in that slot, if slot does not exist, ignore that slot
+				if (meeting.MeetingRecords.ContainsKey(slot))
+				{
+					meeting.MeetingRecords[slot].Add(client_name);
+					joined = true;
+				}
+				else
+				{
+					slots.Remove(slot);
+				}
+			}
+
+			if (joined)
+			{
+				// only update clients if meeting information was changed
+				UpdateMeetingInvolvedClients(meeting);
+			}
+
+			return joined;
 		}
+
 	}
 }

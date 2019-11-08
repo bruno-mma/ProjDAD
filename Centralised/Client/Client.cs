@@ -82,7 +82,56 @@ namespace Client
 
 		public void CreateMeeting(string meeting_topic, int min_attendees, int number_of_slots, int number_of_invitees, List<string> slots, List<string> invitees)
 		{
-			_server.CreateMeeting(_name, meeting_topic, min_attendees, number_of_slots, number_of_invitees, slots, invitees);
+			bool result = _server.CreateMeeting(_name, meeting_topic, min_attendees, number_of_slots, number_of_invitees, slots, invitees);
+
+			if (result)
+			{
+				string print = "Created a meeting with topic: " + meeting_topic + ", with " + min_attendees + " required atendees, with slots: ";
+
+				foreach (string slot in slots)
+				{
+					print += slot + " ";
+				}
+
+				if (number_of_invitees < 0)
+				{
+					print += "and invitees: ";
+
+					foreach (string invitee in invitees)
+					{
+						print += invitee + " ";
+					}
+				}
+
+				Console.WriteLine(print);
+			}
+
+			else
+			{
+				Console.WriteLine("Error: Meeting creation failed");
+			}
+		}
+
+		public void Join(string meeting_topic, int number_of_slots, List<string> slots)
+		{
+			bool result = _server.JoinMeeting(_name, meeting_topic, number_of_slots, slots);
+
+			if (result)
+			{
+				string print = "Joined a meeting with topic: " + meeting_topic + " , at slots: ";
+
+				foreach (string slot in slots)
+				{
+					print += slot + " ";
+				}
+
+				Console.WriteLine(print);
+			}
+
+			else
+			{
+				Console.WriteLine("Error: Cannot join meeting");
+			}
 		}
 	}
 }

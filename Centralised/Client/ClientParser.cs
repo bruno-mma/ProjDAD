@@ -37,14 +37,16 @@ namespace Client
 					Environment.Exit(0);
 					break;
 
-
 				case "connect":
 					Connect(arguments);
 					break;
 
-
 				case "create":
 					Create(arguments);
+					break;
+
+				case "join":
+					Join(arguments);
 					break;
 
 
@@ -75,6 +77,7 @@ namespace Client
 		{
 			if (WrongArgumentCount(arguments, 1)) return;
 
+			//TODO: check if connection was successful
 			_client.Connect(arguments[1]);
 			Console.WriteLine("Connected as user: " + arguments[1]);
 		}
@@ -101,27 +104,21 @@ namespace Client
 			int min_attendees = Int32.Parse(arguments[2]);
 
 			_client.CreateMeeting(topic, min_attendees, number_of_slots, number_of_invitees, slots, invitees);
-
-
-
-			string print = "Created a meeting with topic: " + topic + ", with " + min_attendees + " required atendees, with slots: ";
-
-			foreach (string slot in slots)
-			{
-				print += slot + " ";
-			}
-
-			if (number_of_invitees < 0)
-			{
-				print += "and invitees: ";
-
-				foreach (string invitee in invitees)
-				{
-					print += invitee + " ";
-				}
-			}
-
-			Console.WriteLine(print);
 		}
+
+		private void Join(List<string> arguments)
+		{
+			if (WrongArgumentCount(arguments, 3)) return;
+
+			int number_of_slots = Int32.Parse(arguments[3]);
+
+			//correct number of arguments counting with the number of slots and invitees
+			if (WrongArgumentCount(arguments, 2 + number_of_slots)) return;
+
+			List<string> slots = arguments.GetRange(3, number_of_slots);
+
+			_client.Join(arguments[1], number_of_slots, slots);
+		}
+
 	}
 }
