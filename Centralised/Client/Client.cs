@@ -76,6 +76,8 @@ namespace Client
 
 		public void UpdateMeeting(string meeting_topic, MeetingData meetingData)
 		{
+			//(Distributed version) Aditional logic will needed to determine if this meeting data is actualy more recent than the one already saved
+			_knownMeetings[meeting_topic] = meetingData;
 		}
 
 		public void CreateMeeting(string meeting_topic, int min_attendees, int number_of_slots, int number_of_invitees, List<string> slots, List<string> invitees)
