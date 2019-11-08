@@ -43,6 +43,11 @@ namespace Client
 					break;
 
 
+				case "create":
+					Create(arguments);
+					break;
+
+
 				default:
 					Console.WriteLine("Error: " + arguments[0] + " command not found");
 					break;
@@ -51,29 +56,72 @@ namespace Client
 
 		private void PrintErrorMessage(string command)
 		{
-			Console.WriteLine("ClientParser error: Error parsing command " + command);
+			Console.WriteLine("ClientParser, Error parsing command " + command);
 		}
 
-		private bool CheckArgumentCount(List<string> arguments, int correctCount)
+		//check if command has a minimum number of arguments
+		private bool WrongArgumentCount(List<string> arguments, int correctCount)
 		{
-			if (arguments.Count != correctCount)
+			if (arguments.Count - 1 < correctCount)
 			{
 				PrintErrorMessage(arguments[0]);
-				return false;
+				return true;
 			}
 
-			return true;
+			return false;
 		}
 
 		private void Connect(List<string> arguments)
 		{
-			if (!CheckArgumentCount(arguments, 2))
-			{
-				return;
-			}
+			if (WrongArgumentCount(arguments, 1)) return;
 
 			_client.Connect(arguments[1]);
 			Console.WriteLine("Connected as user: " + arguments[1]);
+		}
+
+		private void Create(List<string> arguments)
+		{
+			if (WrongArgumentCount(arguments, 5)) return;
+
+			int number_of_slots = Int32.Parse(arguments[3]);
+			int number_of_invitees = Int32.Parse(arguments[4]);
+
+			//correct number of arguments counting with the number of slots and invitees
+			if (WrongArgumentCount( arguments, 4 + number_of_slots + number_of_invitees) ) return;
+
+			List<string> slots = arguments.GetRange(5, number_of_slots);
+			List<string> invitees = null;
+
+			if (number_of_invitees > 0)
+			{
+				invitees = arguments.GetRange(6 + number_of_slots, number_of_invitees);
+			}
+
+			string topic = arguments[1];
+			int min_attendees = Int32.Parse(arguments[2]);
+
+			_client.CreateMeeting(topic, min_attendees, number_of_slots, number_of_invitees, slots, invitees);
+
+
+
+			string print = "Created a meeting with topic: " + topic + ", with " + min_attendees + " required atendees, with slots: ";
+
+			foreach (string slot in slots)
+			{
+				print += slot + " ";
+			}
+
+			if (number_of_invitees < 0)
+			{
+				print += "and invitees: ";
+
+				foreach (string invitee in invitees)
+				{
+					print += invitee + " ";
+				}
+			}
+
+			Console.WriteLine(print);
 		}
 	}
 }
