@@ -37,6 +37,12 @@ namespace Server
 		//occupied slots (with closed meetings), key is slot string, Ex: "Lisboa,2020-01-02"
 		private Dictionary<string, Meeting> _slots = new Dictionary<string, Meeting>();
 
+		public override object InitializeLifetimeService()
+		{
+
+			return null;
+
+		}
 
 		public bool AddClient(string client_name, int port)
 		{
@@ -57,13 +63,15 @@ namespace Server
 
 			return true;
 		}
+
 		private void UpdateMeetingInvolvedClients(Meeting meeting)
 		{
 			if (meeting.NumberOfInvitees == 0)
 			{
-				foreach (IClient client in _clients.Values)
+				foreach (var client in _clients)
 				{
-					client.UpdateMeeting(meeting.MeetingTopic, meeting._meetingData);
+					client.Value.UpdateMeeting(meeting.MeetingTopic, meeting._meetingData);
+					Console.WriteLine("Updated client " + client.Key + " with meeting " + meeting.MeetingTopic);
 				}
 			}
 			else
@@ -73,6 +81,7 @@ namespace Server
 					if (_clients.ContainsKey(client_name))
 					{
 						_clients[client_name].UpdateMeeting(meeting.MeetingTopic, meeting._meetingData);
+						Console.WriteLine("Updated client " + client_name + " with meeting " + meeting.MeetingTopic);
 					}
 				}
 			}
@@ -141,7 +150,7 @@ namespace Server
 			foreach (string slot in slots)
 			{
 				// add user into users interested in that slot, if slot does not exist, ignore that slot
-				if (meeting.MeetingRecords.ContainsKey(slot))
+				if (meeting.MeetingRecords.ContainsKey(slot) && !meeting.MeetingRecords[slot].Contains(client_name))
 				{
 					meeting.MeetingRecords[slot].Add(client_name);
 					joined = true;
@@ -154,6 +163,7 @@ namespace Server
 
 			if (joined)
 			{
+				Console.WriteLine("Updating Meeting Datas");
 				// only update clients if meeting information was changed
 				UpdateMeetingInvolvedClients(meeting);
 			}

@@ -48,6 +48,9 @@ namespace Interfaces
 			{
 				_meetingRecords.Add(slot, new List<string>());
 			}
+
+			//FIXME: add meeting owner to slots
+
 		}
 	}
 }
