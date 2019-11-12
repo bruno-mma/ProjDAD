@@ -39,9 +39,7 @@ namespace Server
 
 		public override object InitializeLifetimeService()
 		{
-
 			return null;
-
 		}
 
 		public bool AddClient(string client_name, int port)

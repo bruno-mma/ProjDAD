@@ -101,7 +101,7 @@ namespace Client
 
 			if (number_of_invitees > 0)
 			{
-				invitees = arguments.GetRange(6 + number_of_slots, number_of_invitees);
+				invitees = arguments.GetRange(5 + number_of_slots, number_of_invitees);
 			}
 
 			string topic = arguments[1];

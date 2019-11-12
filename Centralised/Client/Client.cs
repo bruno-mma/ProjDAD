@@ -173,7 +173,7 @@ namespace Client
 
 					foreach (string invitee in meetingData._invitees)
 					{
-						invitees += invitee;
+						invitees += invitee + " ";
 					}
 
 					Console.WriteLine(invitees);
@@ -188,7 +188,7 @@ namespace Client
 					string slot = kvp.Key;
 					List<string> users = kvp.Value;
 
-					slots += slot + ": ";
+					slots += "-" + slot + ": ";
 
 					foreach (string user in users)
 					{
