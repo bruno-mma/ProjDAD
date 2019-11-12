@@ -22,6 +22,7 @@ namespace Interfaces
 		public List<string> _invitees;  //TODO: maybe change this into a hashtable for better performance
 
 		public bool _closed;
+		public bool _canceled;
 
 		//Subset of dates/location where a user is available, ex. “Maria, (2019-11-15, Porto)”
 		//key is slot (ex: "2019-11-15, Porto", each slot as a list of users that selected that slot (ex: <Maria, ...>);
@@ -41,6 +42,7 @@ namespace Interfaces
 			_invitees = invitees;
 
 			_closed = false;
+			_canceled = false;
 			_meetingRecords = new Dictionary<string, List<string>>();
 
 			//create list for each slot, to save clients interested in that slot
@@ -48,9 +50,6 @@ namespace Interfaces
 			{
 				_meetingRecords.Add(slot, new List<string>());
 			}
-
-			//FIXME: add meeting owner to slots
-
 		}
 	}
 }

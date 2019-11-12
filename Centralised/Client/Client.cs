@@ -36,9 +36,7 @@ namespace Client
 
 		public override object InitializeLifetimeService()
 		{
-
 			return null;
-
 		}
 
 		public void Connect(string name)

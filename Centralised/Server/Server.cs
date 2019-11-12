@@ -20,6 +20,12 @@ namespace Server
 			ChannelServices.RegisterChannel(channel, false);
 
 			Server server = new Server();
+
+			//for now hard coded rooms
+			server.AddRoom("Lisboa", "Room-A", 20);
+			server.AddRoom("Lisboa", "Room-B", 10);
+			server.AddRoom("Porto", "Room-C", 15);
+
 			RemotingServices.Marshal(server, "Server", typeof(IServer));
 
 			Console.ReadLine();
@@ -35,7 +41,10 @@ namespace Server
 		private Dictionary<string, IClient> _clients = new Dictionary<string, IClient>();
 
 		//occupied slots (with closed meetings), key is slot string, Ex: "Lisboa,2020-01-02"
-		private Dictionary<string, Meeting> _slots = new Dictionary<string, Meeting>();
+		//private Dictionary<string, Meeting> _slots = new Dictionary<string, Meeting>();
+
+		//Room locations, key is location name
+		private Dictionary<string, Location> _locations = new Dictionary<string, Location>();
 
 		public override object InitializeLifetimeService()
 		{
@@ -161,12 +170,19 @@ namespace Server
 
 			if (joined)
 			{
-				Console.WriteLine("Updating Meeting Datas");
 				// only update clients if meeting information was changed
 				UpdateMeetingInvolvedClients(meeting);
 			}
 
 			return joined;
+		}
+
+
+		public void AddRoom(string location, string name, int capacity)
+		{
+			_locations[location] = new Location(location);
+
+			_locations[location]._rooms[name] = new Room(location, name, capacity);
 		}
 
 	}
