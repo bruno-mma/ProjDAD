@@ -104,9 +104,9 @@ namespace Client
 
 		public void CreateMeeting(string meeting_topic, int min_attendees, int number_of_slots, int number_of_invitees, List<string> slots, List<string> invitees)
 		{
-			bool result = _server.CreateMeeting(_name, meeting_topic, min_attendees, number_of_slots, number_of_invitees, slots, invitees);
+			bool successful = _server.CreateMeeting(_name, meeting_topic, min_attendees, number_of_slots, number_of_invitees, slots, invitees);
 
-			if (result)
+			if (successful)
 			{
 				string print = "Created a meeting with topic: " + meeting_topic + ", with " + min_attendees + " required atendees, with slots: ";
 
@@ -136,17 +136,11 @@ namespace Client
 
 		public void Join(string meeting_topic, int number_of_slots, List<string> slots)
 		{
-			bool result = _server.JoinMeeting(_name, meeting_topic, number_of_slots, slots);
+			bool successful = _server.JoinMeeting(_name, meeting_topic, number_of_slots, slots);
 
-			if (result)
+			if (successful)
 			{
-				string print = "Joined a meeting with topic: " + meeting_topic + " , at slots: ";
-
-				foreach (string slot in slots)
-				{
-					print += slot + " ";
-				}
-
+				string print = "Joined meeting with topic: " + meeting_topic + ".";
 				Console.WriteLine(print);
 			}
 
@@ -161,6 +155,20 @@ namespace Client
 			foreach (MeetingData meetingData in _knownMeetings.Values)
 			{
 				Console.WriteLine("Meeting topic: " + meetingData._meetingTopic + ", coordinator: " + meetingData._meetingOwner);
+
+				if (meetingData._closed)
+				{
+					Console.WriteLine("===CLOSED===");
+					Console.WriteLine("Scheduled at " + meetingData._selectedDate + " at room " + meetingData._selectedRoom + " selected to attend:");
+
+					string attending_users = "";
+					foreach (string  user in meetingData._selectedUsers)
+					{
+						attending_users += user + ' ';
+					}
+					Console.WriteLine(attending_users);
+				}
+
 				Console.WriteLine(meetingData._minAttendees + " minimum attendees, " + meetingData._numberOfSlots + " slots.");
 
 				if (meetingData._numberOfInvitees > 0)
@@ -197,6 +205,29 @@ namespace Client
 				}
 
 				Console.WriteLine(slots);
+			}
+		}
+
+		public void CloseMeeting(string meeting_topic)
+		{
+			bool successful = _server.CloseMeeting(_name, meeting_topic);
+			MeetingData meetingData = _knownMeetings[meeting_topic];
+
+			if (successful)
+			{
+				string print = "Successfully closed meeting " + meeting_topic + " at room " + meetingData._selectedRoom + " at date " + meetingData._selectedDate + ", with users:";
+				Console.WriteLine(print);
+
+				string users = "";
+				foreach (string user in meetingData._selectedUsers)
+				{
+					users += user + " ";
+				}
+				Console.WriteLine(users);
+			}
+			else
+			{
+				Console.WriteLine("Error: Cannot close meeting");
 			}
 		}
 	}

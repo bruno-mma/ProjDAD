@@ -25,9 +25,18 @@ namespace Interfaces
 		public bool _canceled;
 
 		//Subset of dates/location where a user is available, ex. “Maria, (2019-11-15, Porto)”
-		//key is slot (ex: "2019-11-15, Porto", each slot as a list of users that selected that slot (ex: <Maria, ...>);
+		//key is slot (ex: "2019-11-15,Porto", each slot as a list of users that selected that slot (ex: <Maria, ...>);
 		public Dictionary<string, List<string>> _meetingRecords;
 
+
+
+		//list of users selected to attend the meeting
+		public List<string> _selectedUsers;
+
+		//room where the meeting will be held, location,room-name
+		public string _selectedRoom;
+		//date when the meeting will happen
+		public string _selectedDate;
 
 		public MeetingData(string meeting_topic, string meetingOwner, int min_attendees, int number_of_slots, int number_of_invitees, List<string> slots, List<string> invitees)
 		{

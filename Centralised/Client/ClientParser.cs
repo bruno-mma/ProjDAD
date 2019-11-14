@@ -53,6 +53,9 @@ namespace Client
 					List();
 					break;
 
+				case "close":
+					Close(arguments);
+					break;
 
 				default:
 					Console.WriteLine("Error: " + arguments[0] + " command not found");
@@ -127,6 +130,13 @@ namespace Client
 		private void List()
 		{
 			_client.List();
+		}
+
+		private void Close(List<string> arguments)
+		{
+			if (WrongArgumentCount(arguments, 1)) return;
+
+			_client.CloseMeeting(arguments[1]);
 		}
 	}
 }

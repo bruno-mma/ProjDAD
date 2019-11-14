@@ -27,6 +27,11 @@ namespace Server
 		public Dictionary<string, List<string>> MeetingRecords { get => this._meetingData._meetingRecords; set => this._meetingData._meetingRecords = value; }
 
 
+		public List<string> SelectedUsers { get => this._meetingData._selectedUsers; set => this._meetingData._selectedUsers = value; }
+
+		public string SelectedRoom { get => this._meetingData._selectedRoom; set => this._meetingData._selectedRoom = value; }
+		public string SelectedDate { get => this._meetingData._selectedDate; set => this._meetingData._selectedDate = value; }
+
 		public Meeting(string meeting_topic, string meeting_owner, int min_attendees, int number_of_slots, int number_of_invitees, List<string> slots, List<string> invitees)
 		{
 			this._meetingData = new MeetingData(meeting_topic, meeting_owner, min_attendees, number_of_slots, number_of_invitees, slots, invitees);
