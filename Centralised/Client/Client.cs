@@ -84,7 +84,7 @@ namespace Client
 			//(Distributed version) Aditional logic will needed to determine if this meeting data is actualy more recent than the one already saved
 			_knownMeetings[meeting_topic] = meetingData;
 
-			string slots = "asdasasd ";
+			string slots = "slots ";
 
 			foreach (KeyValuePair<string, List<string>> kvp in meetingData._meetingRecords)
 			{
