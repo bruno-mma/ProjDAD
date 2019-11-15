@@ -61,6 +61,10 @@ namespace Client
 					Wait(arguments);
 					break;
 
+				case "run":
+					RunScript(arguments);
+					break;
+
 				default:
 					Console.WriteLine("Error: " + arguments[0] + " command not found");
 					break;
@@ -148,6 +152,27 @@ namespace Client
 			if (WrongArgumentCount(arguments, 1)) return;
 
 			_client.SetWait(Int32.Parse(arguments[1]));
+		}
+
+		private void RunScript(List<string> arguments)
+		{
+			if (WrongArgumentCount(arguments, 1)) return;
+
+			try
+			{
+				//assuming script is inside the solution folder
+				string[] lines = System.IO.File.ReadAllLines(@"..\..\..\" + arguments[1] + ".txt");
+
+				foreach (string line in lines)
+				{
+					Console.WriteLine("Running Command: " + line);
+					this.Parse(line);
+				}
+			}
+			catch (System.IO.FileNotFoundException)
+			{
+				Console.WriteLine("ClientParser: File not found: " + arguments[1]);
+			}
 		}
 	}
 }
