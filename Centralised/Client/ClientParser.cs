@@ -57,6 +57,10 @@ namespace Client
 					Close(arguments);
 					break;
 
+				case "wait":
+					Wait(arguments);
+					break;
+
 				default:
 					Console.WriteLine("Error: " + arguments[0] + " command not found");
 					break;
@@ -137,6 +141,13 @@ namespace Client
 			if (WrongArgumentCount(arguments, 1)) return;
 
 			_client.CloseMeeting(arguments[1]);
+		}
+
+		private void Wait(List<string> arguments)
+		{
+			if (WrongArgumentCount(arguments, 1)) return;
+
+			_client.SetWait(Int32.Parse(arguments[1]));
 		}
 	}
 }
