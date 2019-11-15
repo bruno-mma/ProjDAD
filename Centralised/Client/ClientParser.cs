@@ -17,7 +17,7 @@ namespace Client
 			_client = client;
 		}
 
-		public void Parse(string command)
+		public void ParseExecute(string command)
 		{
 			List<string> arguments = new List<string>(command.Split(' '));
 
@@ -166,7 +166,7 @@ namespace Client
 				foreach (string line in lines)
 				{
 					Console.WriteLine("Running Command: " + line);
-					this.Parse(line);
+					this.ParseExecute(line);
 				}
 			}
 			catch (System.IO.FileNotFoundException)

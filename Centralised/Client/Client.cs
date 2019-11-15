@@ -17,7 +17,7 @@ namespace Client
 
 			while (true)
 			{
-				parser.Parse(Console.ReadLine());
+				parser.ParseExecute(Console.ReadLine());
 			}
 		}
 	}
