@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Runtime.Remoting;
 using System.Runtime.Remoting.Channels;
 using System.Runtime.Remoting.Channels.Tcp;
+using System.Threading;
 
 namespace Client
 {
@@ -30,9 +31,7 @@ namespace Client
 
 		private Dictionary<string, MeetingData> _knownMeetings = new Dictionary<string, MeetingData>();
 
-		public Client()
-		{
-		}
+		private int _waitMillisecondsTimeout = 0;
 
 		public override object InitializeLifetimeService()
 		{
@@ -41,6 +40,8 @@ namespace Client
 
 		public void Connect(string name)
 		{
+			WaitIfNeeded();
+
 			int port = _initialPort;
 			bool open_port_found = false;
 
@@ -81,6 +82,8 @@ namespace Client
 
 		public void UpdateMeeting(string meeting_topic, MeetingData meetingData)
 		{
+			WaitIfNeeded();
+
 			//(Distributed version) Aditional logic will needed to determine if this meeting data is actualy more recent than the one already saved
 			_knownMeetings[meeting_topic] = meetingData;
 
@@ -104,6 +107,8 @@ namespace Client
 
 		public void CreateMeeting(string meeting_topic, int min_attendees, int number_of_slots, int number_of_invitees, List<string> slots, List<string> invitees)
 		{
+			WaitIfNeeded();
+
 			bool successful = _server.CreateMeeting(_name, meeting_topic, min_attendees, number_of_slots, number_of_invitees, slots, invitees);
 
 			if (successful)
@@ -136,6 +141,8 @@ namespace Client
 
 		public void Join(string meeting_topic, int number_of_slots, List<string> slots)
 		{
+			WaitIfNeeded();
+
 			bool successful = _server.JoinMeeting(_name, meeting_topic, number_of_slots, slots);
 
 			if (successful)
@@ -152,6 +159,8 @@ namespace Client
 
 		public void List()
 		{
+			WaitIfNeeded();
+
 			foreach (MeetingData meetingData in _knownMeetings.Values)
 			{
 				Console.WriteLine("Meeting topic: " + meetingData._meetingTopic + ", coordinator: " + meetingData._meetingOwner);
@@ -210,6 +219,8 @@ namespace Client
 
 		public void CloseMeeting(string meeting_topic)
 		{
+			WaitIfNeeded();
+
 			bool successful = _server.CloseMeeting(_name, meeting_topic);
 			MeetingData meetingData = _knownMeetings[meeting_topic];
 
@@ -228,6 +239,20 @@ namespace Client
 			else
 			{
 				Console.WriteLine("Error: Cannot close meeting");
+			}
+		}
+
+		public void SetWait(int milliseconds)
+		{
+			_waitMillisecondsTimeout = milliseconds;
+		}
+
+		private void WaitIfNeeded()
+		{
+			if (_waitMillisecondsTimeout != 0)
+			{
+				Thread.Sleep(_waitMillisecondsTimeout);
+				_waitMillisecondsTimeout = 0;
 			}
 		}
 	}
