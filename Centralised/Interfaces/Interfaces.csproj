@@ -41,6 +41,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Location.cs" />
+    <Compile Include="Room.cs" />
+    <Compile Include="URL.cs" />
     <Compile Include="MeetingData.cs" />
     <Compile Include="Interfaces.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

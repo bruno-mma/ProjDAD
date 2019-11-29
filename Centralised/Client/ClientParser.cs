@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Client
@@ -62,7 +63,11 @@ namespace Client
 					break;
 
 				case "run":
-					RunScript(arguments);
+					RunScript(arguments, false);
+					break;
+
+				case "runp":
+					RunScript(arguments, true);
 					break;
 
 				default:
@@ -88,13 +93,12 @@ namespace Client
 			return false;
 		}
 
+
 		private void Connect(List<string> arguments)
 		{
-			if (WrongArgumentCount(arguments, 1)) return;
+			if (WrongArgumentCount(arguments, 3)) return;
 
-			//TODO: check if connection was successful
-			_client.Connect(arguments[1]);
-			Console.WriteLine("Connected as user: " + arguments[1]);
+			_client.Connect(arguments[1], arguments[2], arguments[3]);
 		}
 
 		private void Create(List<string> arguments)
@@ -151,10 +155,10 @@ namespace Client
 		{
 			if (WrongArgumentCount(arguments, 1)) return;
 
-			_client.SetWait(Int32.Parse(arguments[1]));
+			Thread.Sleep(Int32.Parse(arguments[1]));
 		}
 
-		private void RunScript(List<string> arguments)
+		public void RunScript(List<string> arguments, bool pause)
 		{
 			if (WrongArgumentCount(arguments, 1)) return;
 
@@ -165,14 +169,26 @@ namespace Client
 
 				foreach (string line in lines)
 				{
-					Console.WriteLine("Running Command: " + line);
+					if (pause)
+					{
+						Console.WriteLine("Press enter to run Command:" + line);
+						Console.ReadLine();
+					}
+					else
+					{
+						Console.WriteLine("Running Command: " + line);
+					}
 					this.ParseExecute(line);
 				}
+
+				Console.Write("Finished script execution.");
 			}
 			catch (System.IO.FileNotFoundException)
 			{
-				Console.WriteLine("ClientParser: File not found: " + arguments[1]);
+				Console.Write("ClientParser: File not found: " + arguments[1]);
 			}
+
+			Console.WriteLine(" Reading commands from console");
 		}
 	}
 }

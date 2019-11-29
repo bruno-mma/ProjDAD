@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace Interfaces
 {
@@ -14,7 +10,9 @@ namespace Interfaces
 
 		bool CloseMeeting(string client_name, string meeting_topic);
 
-		bool AddClient(string client_name, int port);
+		bool AddClient(string client_URL, string client_name);
+
+		void SetRooms(Dictionary<string, Location> locations);
 	}
 
 	public interface IClient
@@ -25,5 +23,12 @@ namespace Interfaces
 	public interface IMeeting
 	{
 
+	}
+
+	public interface IPCS
+	{
+		void StartServer(string server_id, string URL, int max_faults, int min_delay, int max_delay);
+
+		void StartClient(string name, string user_URL, string server_URL, string script_file);
 	}
 }
