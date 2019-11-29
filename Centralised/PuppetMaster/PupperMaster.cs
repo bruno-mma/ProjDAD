@@ -1,46 +1,140 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.IO;
-using System.Threading.Tasks;
+using Interfaces;
+using System.Runtime.Remoting.Channels.Tcp;
+using System.Runtime.Remoting.Channels;
 
-namespace PuppetMaster {
+namespace PuppetMaster
+{
 
-    class Program {
+	class Program
+	{
     
-        static void Main() {
-        
-            try {
-                // File needs to be inside ...\PupperMaster\bin\Debug
-                // TODO: find how to give the file path without having to be an absolute path
-                string[] configFileContents = File.ReadAllLines("configFile.txt");
+		static void Main()
+		{
 
-                foreach (var item in configFileContents) {
-                    // TODO: execute command
-                }
-                Console.ReadLine();
+			PuppetMaster puppetMaster = new PuppetMaster();
+			PuppetMasterParser puppetMasterParser = new PuppetMasterParser(puppetMaster);
+
+			TcpChannel channel = new TcpChannel(puppetMaster._port);
+			ChannelServices.RegisterChannel(channel, false);
+
+			try
+			{
+				//file has to be inside solution folder
+				string[] configFileContents = File.ReadAllLines(Path.Combine(@"..\..\..\", "configFile.txt"));
+
+				Console.WriteLine("Config file found. Executing...");
+
+                foreach (string line in configFileContents)
+				{
+					Console.WriteLine("Running Command: " + line);
+					puppetMasterParser.ParseExecute(line);
+				}
+
+				Console.Write("Finished config file execution. ");
             }
-            
-            catch (FileNotFoundException) {
-                Console.WriteLine("No configuration file provided. Reading commands from console");
-                    
-                while (true) {
-                    string command = Console.ReadLine();
-                    // TODO: execute command
-                }
+
+            catch (FileNotFoundException)
+			{
+                Console.Write("No configuration file provided. ");
             }
+
+			Console.WriteLine("Reading commands from console");
+
+			while (true)
+			{
+                string command = Console.ReadLine();
+				puppetMasterParser.ParseExecute(command);
+			}
         }
     }
 
-    public class PuppetMaster {
-        // just as an example
-        private readonly List<string> _availablePCSs = new List<string> {
-            "tcp://URL:10000", 
-            "tcp://URL2:10000" 
-        };
+    public class PuppetMaster : MarshalByRefObject
+	{
+		public readonly int _port = 10001;
 
-        public PuppetMaster () {
+		//key is IP
+		private Dictionary<string, IPCS> _PCSs = new Dictionary<string, IPCS>();
+
+		//key is server id
+		private Dictionary<string, IServer> _servers = new Dictionary<string, IServer>();
+
+		//Room locations, key is location name
+		private Dictionary<string, Location> _locations = new Dictionary<string, Location>();
+
+		public PuppetMaster ()
+		{
+			_PCSs.Add("localhost", new PCS.PCS());
         }
-    }
+
+		//TODO: establish communication channel with non local PCSs
+		//TODO: All PuppetMaster commands should be executed asynchronously except for the Wait command.
+
+		public void StartClient(string name, string user_URL, string server_URL, string script_file)
+		{
+			string ip = URL.GetIP(user_URL);
+			
+			_PCSs[ip].StartClient(name, user_URL, server_URL, script_file);
+		}
+
+		public void StartServer(string id, string server_URL, int max_faults, int min_delay, int max_delay)
+		{
+			string ip = URL.GetIP(server_URL);
+
+			_PCSs[ip].StartServer(id, server_URL, max_faults, min_delay, max_delay);
+
+			IServer server = (IServer)Activator.GetObject(typeof(IServer), server_URL);
+
+			//weak check
+			if (server == null)
+			{
+				Console.WriteLine("Failed to connect to server at " + server_URL);
+			}
+			else
+			{
+				Console.WriteLine("Connected to server at " + server_URL);
+			}
+
+			_servers[id] = server;
+			server.SetRooms(_locations);
+		}
+
+		public void AddRoom(string location, string name, int capacity)
+		{
+			if (!_locations.ContainsKey(location))
+			{
+				_locations[location] = new Location(location);
+			}
+
+			_locations[location]._rooms.Add(name, new Room(location, name, capacity));
+		}
+
+		public void AddServer(string server_id, IServer server)
+		{
+			_servers.Add(server_id, server);
+
+			server.SetRooms(_locations);
+		}
+
+		public void AddPCS(string ip)
+		{
+			string pcs_URL = "tcp://" + ip + ":10000/PCS";
+
+			IPCS pcs = (IPCS)Activator.GetObject(typeof(IPCS), pcs_URL);
+
+			//weak check
+			if (pcs == null)
+			{
+				Console.WriteLine("Failed to connect to PCS at " + pcs_URL);
+			}
+			else
+			{
+				Console.WriteLine("Connected to PCS at " + pcs_URL);
+			}
+
+			_PCSs.Add(ip, pcs);
+		}
+	}
 }

@@ -1,12 +1,9 @@
 ﻿using Interfaces;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.Remoting;
 using System.Runtime.Remoting.Channels;
 using System.Runtime.Remoting.Channels.Tcp;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Server
 {
@@ -16,18 +13,34 @@ namespace Server
 
 		static void Main(string[] args)
 		{
-			TcpChannel channel = new TcpChannel(_server_port);
-			ChannelServices.RegisterChannel(channel, false);
+			Server server;
 
-			Server server = new Server();
+			// non PCS execution
+			if (args.Length == 1)
+			{
+				server = new Server();
 
-			//for now hard coded rooms
-			server.AddRoom("Lisboa", "Room-A", 20);
-			server.AddRoom("Lisboa", "Room-B", 10);
-			server.AddRoom("Porto", "Room-C", 15);
-			server.AddRoom("memeCity", "memeZone", 2);
+				TcpChannel channel = new TcpChannel(_server_port);
+				ChannelServices.RegisterChannel(channel, false);
 
-			RemotingServices.Marshal(server, "Server", typeof(IServer));
+				RemotingServices.Marshal(server, "Server", typeof(IServer));
+			}
+
+			// server started by PCS
+			else
+			{
+				server = new Server(args[0], Int32.Parse(args[2]), Int32.Parse(args[3]), Int32.Parse(args[4]));
+
+				int port = URL.GetPort(args[1]);
+				string URI = URL.GetURI(args[1]);
+
+				TcpChannel channel = new TcpChannel(port);
+				ChannelServices.RegisterChannel(channel, false);
+
+				RemotingServices.Marshal(server, URI, typeof(IServer));
+
+				Console.WriteLine("Server running at " + args[1]);
+			}
 
 			Console.ReadLine();
 		}
@@ -35,37 +48,53 @@ namespace Server
 
 	public class Server : MarshalByRefObject, IServer
 	{
+		string _id;
+
+		int _maxFaults;
+		int _minDelay;
+		int _maxDelay;
+
 		//key is meeting topic
 		private Dictionary<string, Meeting> _meetings = new Dictionary<string, Meeting>();
 
 		//key is client name
 		private Dictionary<string, IClient> _clients = new Dictionary<string, IClient>();
 
-		//occupied slots (with closed meetings), key is slot string, Ex: "Lisboa,2020-01-02"
-		//private Dictionary<string, Meeting> _slots = new Dictionary<string, Meeting>();
-
 		//Room locations, key is location name
 		private Dictionary<string, Location> _locations = new Dictionary<string, Location>();
+
+		public Server(string server_id, int max_faults, int min_delay, int max_delay)
+		{
+			_id = server_id;
+
+			_maxFaults = max_faults;
+			_minDelay = min_delay;
+			_maxDelay = max_delay;
+		}
+
+		public Server() : this("s1", 0, 0, 0)
+		{
+		}
 
 		public override object InitializeLifetimeService()
 		{
 			return null;
 		}
 
-		public bool AddClient(string client_name, int port)
+		public bool AddClient(string client_URL, string client_name)
 		{
-			IClient client = (IClient)Activator.GetObject(typeof(IClient), "tcp://localhost:" + port + "/" + client_name);
+			IClient client = (IClient)Activator.GetObject(typeof(IClient), client_URL);
 
 			//weak check
 			if (client == null)
 			{
-				Console.WriteLine("Could not locate client" + client_name);
+				Console.WriteLine("Could not locate client at" + client_URL);
 				return false;
 			}
 
 			else
 			{
-				Console.WriteLine("Adding client: " + client_name + ", on port: " + port);
+				Console.WriteLine("Adding client at: " + client_URL);
 				_clients[client_name] = client;
 
 				UpdateClientAllMeetings(client_name);
@@ -304,16 +333,9 @@ namespace Server
 			return joined;
 		}
 
-
-		public void AddRoom(string location, string name, int capacity)
+		public void SetRooms(Dictionary<string, Location> locations)
 		{
-			if (!_locations.ContainsKey(location))
-			{
-				_locations[location] = new Location(location);
-			}
-
-			_locations[location]._rooms.Add(name, new Room(location, name, capacity));
+			_locations = locations;
 		}
-
 	}
 }

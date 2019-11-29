@@ -1,4 +1,3 @@
-wait 2000
 create myTopic0 2 2 2 Lisboa,2020-01-02 Porto,2020-02-03 c1 c2
 create myTopic1 2 2 2 Lisboa,2020-01-02 Porto,2020-02-03 c1 c2
 create myTopic2 1 1 0 Porto,2020-01-10

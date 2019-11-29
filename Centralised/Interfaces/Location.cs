@@ -4,9 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Server
+namespace Interfaces
 {
-	class Location
+	[Serializable]
+	public class Location
 	{
 		public string _name;
 

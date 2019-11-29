@@ -4,10 +4,10 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{1CE1281F-5895-4C80-92C1-A822105B3250}</ProjectGuid>
+    <ProjectGuid>{84F97588-CDA8-4ADC-A98F-E438EBCFF051}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>PuppetMaster</RootNamespace>
-    <AssemblyName>PuppetMaster</AssemblyName>
+    <RootNamespace>PCS</RootNamespace>
+    <AssemblyName>PCS</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -44,8 +44,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="PuppetMasterParser.cs" />
-    <Compile Include="PupperMaster.cs" />
+    <Compile Include="PCS.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -55,10 +54,6 @@
     <ProjectReference Include="..\Interfaces\Interfaces.csproj">
       <Project>{D5D43A3C-E3CC-41B4-AAF1-8A31EB667CF3}</Project>
       <Name>Interfaces</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\PCS\PCS.csproj">
-      <Project>{84f97588-cda8-4adc-a98f-e438ebcff051}</Project>
-      <Name>PCS</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

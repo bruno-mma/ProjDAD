@@ -4,9 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Server
+namespace Interfaces
 {
-	class Room : IComparable<Room>
+	[Serializable]
+	public class Room
 	{
 		public string _location;
 		public string _name;
@@ -44,11 +45,6 @@ namespace Server
 			if (r1.NumAvailable < r2.NumAvailable) return 1;
 
 			return 0;
-		}
-
-		public int CompareTo(Room other)
-		{
-			return CompareRooms(this, other);
 		}
 
 		public void SetPotentialAttending(int interested)
