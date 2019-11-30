@@ -13,6 +13,10 @@ namespace Interfaces
 		bool AddClient(string client_URL, string client_name);
 
 		void SetRooms(Dictionary<string, Location> locations);
+
+        void Freeze();
+
+        void Unfreeze();
 	}
 
 	public interface IClient
