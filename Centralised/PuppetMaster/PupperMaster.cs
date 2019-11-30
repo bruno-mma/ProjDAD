@@ -52,89 +52,99 @@ namespace PuppetMaster
     }
 
     public class PuppetMaster : MarshalByRefObject
-	{
-		public readonly int _port = 10001;
+    {
+        public readonly int _port = 10001;
 
-		//key is IP
-		private Dictionary<string, IPCS> _PCSs = new Dictionary<string, IPCS>();
+        //key is IP
+        private Dictionary<string, IPCS> _PCSs = new Dictionary<string, IPCS>();
 
-		//key is server id
-		private Dictionary<string, IServer> _servers = new Dictionary<string, IServer>();
+        //key is server id
+        private Dictionary<string, IServer> _servers = new Dictionary<string, IServer>();
 
-		//Room locations, key is location name
-		private Dictionary<string, Location> _locations = new Dictionary<string, Location>();
+        //Room locations, key is location name
+        private Dictionary<string, Location> _locations = new Dictionary<string, Location>();
 
-		public PuppetMaster ()
-		{
-			_PCSs.Add("localhost", new PCS.PCS());
+        public PuppetMaster()
+        {
+            _PCSs.Add("localhost", new PCS.PCS());
         }
 
-		//TODO: establish communication channel with non local PCSs
-		//TODO: All PuppetMaster commands should be executed asynchronously except for the Wait command.
+        //TODO: establish communication channel with non local PCSs
+        //TODO: All PuppetMaster commands should be executed asynchronously except for the Wait command.
 
-		public void StartClient(string name, string user_URL, string server_URL, string script_file)
-		{
-			string ip = URL.GetIP(user_URL);
-			
-			_PCSs[ip].StartClient(name, user_URL, server_URL, script_file);
-		}
+        public void StartClient(string name, string user_URL, string server_URL, string script_file)
+        {
+            string ip = URL.GetIP(user_URL);
 
-		public void StartServer(string id, string server_URL, int max_faults, int min_delay, int max_delay)
-		{
-			string ip = URL.GetIP(server_URL);
+            _PCSs[ip].StartClient(name, user_URL, server_URL, script_file);
+        }
 
-			_PCSs[ip].StartServer(id, server_URL, max_faults, min_delay, max_delay);
+        public void StartServer(string id, string server_URL, int max_faults, int min_delay, int max_delay)
+        {
+            string ip = URL.GetIP(server_URL);
 
-			IServer server = (IServer)Activator.GetObject(typeof(IServer), server_URL);
+            _PCSs[ip].StartServer(id, server_URL, max_faults, min_delay, max_delay);
 
-			//weak check
-			if (server == null)
-			{
-				Console.WriteLine("Failed to connect to server at " + server_URL);
-			}
-			else
-			{
-				Console.WriteLine("Connected to server at " + server_URL);
-			}
+            IServer server = (IServer)Activator.GetObject(typeof(IServer), server_URL);
 
-			_servers[id] = server;
-			server.SetRooms(_locations);
-		}
+            //weak check
+            if (server == null)
+            {
+                Console.WriteLine("Failed to connect to server at " + server_URL);
+            }
+            else
+            {
+                Console.WriteLine("Connected to server at " + server_URL);
+            }
 
-		public void AddRoom(string location, string name, int capacity)
-		{
-			if (!_locations.ContainsKey(location))
-			{
-				_locations[location] = new Location(location);
-			}
+            _servers[id] = server;
+            server.SetRooms(_locations);
+        }
 
-			_locations[location]._rooms.Add(name, new Room(location, name, capacity));
-		}
+        public void AddRoom(string location, string name, int capacity)
+        {
+            if (!_locations.ContainsKey(location))
+            {
+                _locations[location] = new Location(location);
+            }
 
-		public void AddServer(string server_id, IServer server)
-		{
-			_servers.Add(server_id, server);
+            _locations[location]._rooms.Add(name, new Room(location, name, capacity));
+        }
 
-			server.SetRooms(_locations);
-		}
+        public void AddServer(string server_id, IServer server)
+        {
+            _servers.Add(server_id, server);
 
-		public void AddPCS(string ip)
-		{
-			string pcs_URL = "tcp://" + ip + ":10000/PCS";
+            server.SetRooms(_locations);
+        }
 
-			IPCS pcs = (IPCS)Activator.GetObject(typeof(IPCS), pcs_URL);
+        public void AddPCS(string ip)
+        {
+            string pcs_URL = "tcp://" + ip + ":10000/PCS";
 
-			//weak check
-			if (pcs == null)
-			{
-				Console.WriteLine("Failed to connect to PCS at " + pcs_URL);
-			}
-			else
-			{
-				Console.WriteLine("Connected to PCS at " + pcs_URL);
-			}
+            IPCS pcs = (IPCS)Activator.GetObject(typeof(IPCS), pcs_URL);
 
-			_PCSs.Add(ip, pcs);
-		}
-	}
+            //weak check
+            if (pcs == null)
+            {
+                Console.WriteLine("Failed to connect to PCS at " + pcs_URL);
+            }
+            else
+            {
+                Console.WriteLine("Connected to PCS at " + pcs_URL);
+            }
+
+            _PCSs.Add(ip, pcs);
+        }
+
+        public void FreezeServer(string serverId)
+        {
+            _servers[serverId].Freeze();
+        }
+
+        public void UnfreezeServer(string serverId)
+        {
+            _servers[serverId].Unfreeze();
+        }
+    }
 }

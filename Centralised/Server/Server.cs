@@ -54,8 +54,11 @@ namespace Server
 		int _minDelay;
 		int _maxDelay;
 
-		//key is meeting topic
-		private Dictionary<string, Meeting> _meetings = new Dictionary<string, Meeting>();
+        private bool _freezed = false;
+        private List<Action> _receivedMessagesWhenFreezed = new List<Action>();
+
+        //key is meeting topic
+        private Dictionary<string, Meeting> _meetings = new Dictionary<string, Meeting>();
 
 		//key is client name
 		private Dictionary<string, IClient> _clients = new Dictionary<string, IClient>();
@@ -81,8 +84,28 @@ namespace Server
 			return null;
 		}
 
+        public void Freeze ()
+        {
+            _freezed = true;
+        }
+
+        public void Unfreeze ()
+        {
+            _freezed = false;
+
+            foreach (Delegate message in _receivedMessagesWhenFreezed)
+            {
+                message.DynamicInvoke();
+            }
+        }
+
 		public bool AddClient(string client_URL, string client_name)
 		{
+            if (_freezed)
+            {
+                _receivedMessagesWhenFreezed.Add(() => AddClient(client_URL, client_name));
+            }
+
 			IClient client = (IClient)Activator.GetObject(typeof(IClient), client_URL);
 
 			//weak check
@@ -141,8 +164,13 @@ namespace Server
 
 		public bool CloseMeeting(string client_name, string meeting_topic)
 		{
-			//if meeting does not exist, cant close it
-			if (!_meetings.ContainsKey(meeting_topic))
+            if (_freezed)
+            {
+                _receivedMessagesWhenFreezed.Add(() => CloseMeeting(client_name, meeting_topic));
+            }
+
+            //if meeting does not exist, cant close it
+            if (!_meetings.ContainsKey(meeting_topic))
 			{
 				return false;
 			}
@@ -230,8 +258,13 @@ namespace Server
 		public bool CreateMeeting
 			(string owner_name, string meeting_topic, int min_attendees, int number_of_slots, int number_of_invitees, List<string> slots, List<string> invitees)
 		{
-			//meeting topic has to be unique
-			if (_meetings.ContainsKey(meeting_topic))
+            if (_freezed)
+            {
+                _receivedMessagesWhenFreezed.Add(() => CreateMeeting(owner_name, meeting_topic, min_attendees, number_of_slots, number_of_invitees, slots, invitees));
+            }
+
+            //meeting topic has to be unique
+            if (_meetings.ContainsKey(meeting_topic))
 			{
 				return false;
 			}
@@ -292,8 +325,13 @@ namespace Server
 
 		public bool JoinMeeting(string client_name, string meeting_topic, int slot_count, List<string> slots)
 		{
-			//if meeting does not exist, user cannot join
-			if (!_meetings.ContainsKey(meeting_topic))
+            if (_freezed)
+            {
+                _receivedMessagesWhenFreezed.Add(() => JoinMeeting(client_name, meeting_topic, slot_count, slots));
+            }
+
+            //if meeting does not exist, user cannot join
+            if (!_meetings.ContainsKey(meeting_topic))
 			{
 				return false;
 			}

@@ -73,6 +73,14 @@ namespace PuppetMaster
 				case "Wait":
 					Wait(arguments);
 					break;
+
+                case "Freeze":
+                    Freeze(arguments);
+                    break;
+
+                case "Unfreeze":
+                    Unfreeze(arguments);
+                    break;
 			}
 		}
 
@@ -110,5 +118,19 @@ namespace PuppetMaster
 
 			_puppetMaster.AddPCS(arguments[1]);
 		}
+
+        private void Freeze(List<string> arguments)
+        {
+            if (WrongArgumentCount(arguments, 1)) return;
+
+            _puppetMaster.FreezeServer(arguments[1]);
+        }
+
+        private void Unfreeze(List<string> arguments)
+        {
+            if (WrongArgumentCount(arguments, 1)) return;
+
+            _puppetMaster.UnfreezeServer(arguments[1]);
+        }
 	}
 }
