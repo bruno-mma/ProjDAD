@@ -19,7 +19,7 @@ namespace Client
 			if (args.Length != 0)
 			{
 				client.Connect(args[0], args[1], args[2]);
-				Console.WriteLine("Executing script: " + args[3]);
+				Console.WriteLine("Executing script: " + args[3] + ".txt");
 				parser.RunScript( new List<string>(){ "run", args[3] } , false);
 			}
 
@@ -144,7 +144,7 @@ namespace Client
 		//TODO: print something different if meeting was canceled
 		public void List()
 		{
-			Console.WriteLine("--------------------LIST--------------------");
+			Console.WriteLine("----------------------------------------LIST----------------------------------------");
 
 			foreach (MeetingData meetingData in _knownMeetings.Values)
 			{

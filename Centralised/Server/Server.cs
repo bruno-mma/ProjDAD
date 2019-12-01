@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Runtime.Remoting;
 using System.Runtime.Remoting.Channels;
 using System.Runtime.Remoting.Channels.Tcp;
+using System.Threading;
 
 namespace Server
 {
@@ -54,8 +55,10 @@ namespace Server
 		int _minDelay;
 		int _maxDelay;
 
-		private bool _freezed = false;
-		private List<Action> _receivedMessagesWhenFreezed = new List<Action>();
+		private Random _rdn = new Random();
+
+		private bool _frozen = false;
+		private List<Action> _messageBacklog = new List<Action>();
 
 		//key is meeting topic
 		private Dictionary<string, Meeting> _meetings = new Dictionary<string, Meeting>();
@@ -84,16 +87,28 @@ namespace Server
 			return null;
 		}
 
+		public void DelayMessage()
+		{
+			if (_maxDelay != 0 && _minDelay != 0)
+			{
+				Thread.Sleep(_rdn.Next(_minDelay, _maxDelay));
+			}
+		}
+
 		public void Freeze ()
 		{
-			_freezed = true;
+			_frozen = true;
+
+			Console.WriteLine("This server was frozen by the PuppetMaster");
 		}
 
 		public void Unfreeze ()
 		{
-			_freezed = false;
+			_frozen = false;
 
-			foreach (Delegate message in _receivedMessagesWhenFreezed)
+			Console.WriteLine("This server was unfrozen by the PuppetMaster");
+
+			foreach (Delegate message in _messageBacklog)
 			{
 				message.DynamicInvoke();
 			}
@@ -101,9 +116,9 @@ namespace Server
 
 		public bool AddClient(string client_URL, string client_name)
 		{
-			if (_freezed)
+			if (_frozen)
 			{
-				_receivedMessagesWhenFreezed.Add(() => AddClient(client_URL, client_name));
+				_messageBacklog.Add(() => AddClient(client_URL, client_name));
 			}
 
 			IClient client = (IClient)Activator.GetObject(typeof(IClient), client_URL);
@@ -133,7 +148,7 @@ namespace Server
 				foreach (var client in _clients)
 				{
 					client.Value.UpdateMeeting(meeting.MeetingTopic, meeting._meetingData);
-					Console.WriteLine("Updated client " + client.Key + " with meeting " + meeting.MeetingTopic);
+					//Console.WriteLine("Updated client " + client.Key + " with meeting " + meeting.MeetingTopic);
 				}
 			}
 			else
@@ -143,7 +158,7 @@ namespace Server
 					if (_clients.ContainsKey(client_name))
 					{
 						_clients[client_name].UpdateMeeting(meeting.MeetingTopic, meeting._meetingData);
-						Console.WriteLine("Updated client " + client_name + " with meeting " + meeting.MeetingTopic);
+						//Console.WriteLine("Updated client " + client_name + " with meeting " + meeting.MeetingTopic);
 					}
 				}
 			}
@@ -156,7 +171,7 @@ namespace Server
 				if (meeting.NumberOfInvitees == 0 || meeting.Invitees.Contains(client_name))
 				{
 					_clients[client_name].UpdateMeeting(meeting.MeetingTopic, meeting._meetingData);
-					Console.WriteLine("Updated client " + client_name + " with meeting " + meeting.MeetingTopic);
+					//Console.WriteLine("Updated client " + client_name + " with meeting " + meeting.MeetingTopic);
 				}
 			}
 		}
@@ -164,9 +179,9 @@ namespace Server
 
 		public bool CloseMeeting(string client_name, string meeting_topic)
 		{
-			if (_freezed)
+			if (_frozen)
 			{
-				_receivedMessagesWhenFreezed.Add(() => CloseMeeting(client_name, meeting_topic));
+				_messageBacklog.Add(() => CloseMeeting(client_name, meeting_topic));
 			}
 
 			//if meeting does not exist, cant close it
@@ -258,9 +273,9 @@ namespace Server
 		public bool CreateMeeting
 			(string owner_name, string meeting_topic, int min_attendees, int number_of_slots, int number_of_invitees, List<string> slots, List<string> invitees)
 		{
-			if (_freezed)
+			if (_frozen)
 			{
-				_receivedMessagesWhenFreezed.Add(() => CreateMeeting(owner_name, meeting_topic, min_attendees, number_of_slots, number_of_invitees, slots, invitees));
+				_messageBacklog.Add(() => CreateMeeting(owner_name, meeting_topic, min_attendees, number_of_slots, number_of_invitees, slots, invitees));
 			}
 
 			//meeting topic has to be unique
@@ -325,9 +340,9 @@ namespace Server
 
 		public bool JoinMeeting(string client_name, string meeting_topic, int slot_count, List<string> slots)
 		{
-			if (_freezed)
+			if (_frozen)
 			{
-				_receivedMessagesWhenFreezed.Add(() => JoinMeeting(client_name, meeting_topic, slot_count, slots));
+				_messageBacklog.Add(() => JoinMeeting(client_name, meeting_topic, slot_count, slots));
 			}
 
 			//if meeting does not exist, user cannot join

@@ -81,6 +81,10 @@ namespace PuppetMaster
 				case "Unfreeze":
 					Unfreeze(arguments);
 					break;
+
+				default:
+					Console.WriteLine("Error: " + arguments[0] + " command not found");
+					break;
 			}
 		}
 
