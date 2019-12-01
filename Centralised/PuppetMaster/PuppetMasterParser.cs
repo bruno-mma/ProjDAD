@@ -90,6 +90,11 @@ namespace PuppetMaster
 					RunScript(arguments, true);
 					break;
 
+				case "status":
+					Status();
+					break;
+					
+
 				default:
 					Console.WriteLine("Error: " + arguments[0] + " command not found");
 					break;
@@ -178,6 +183,11 @@ namespace PuppetMaster
 			}
 
 			Console.WriteLine(" Reading commands from console");
+		}
+
+		private void Status()
+		{
+			_puppetMaster.PrintStatus();
 		}
 	}
 }
