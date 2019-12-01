@@ -69,7 +69,6 @@ namespace PuppetMaster
 			_PCSs.Add("localhost", new PCS.PCS());
 		}
 
-		//TODO: establish communication channel with non local PCSs
 		//TODO: All PuppetMaster commands should be executed asynchronously except for the Wait command.
 
 		public void StartClient(string name, string user_URL, string server_URL, string script_file)
@@ -137,14 +136,18 @@ namespace PuppetMaster
 			_PCSs.Add(ip, pcs);
 		}
 
-		public void FreezeServer(string serverId)
+		public void FreezeServer(string server_id)
 		{
-			_servers[serverId].Freeze();
+			Console.WriteLine("Freezing server " + server_id);
+
+			_servers[server_id].Freeze();
 		}
 
-		public void UnfreezeServer(string serverId)
+		public void UnfreezeServer(string server_id)
 		{
-			_servers[serverId].Unfreeze();
+			Console.WriteLine("Unfreezing server " + server_id);
+
+			_servers[server_id].Unfreeze();
 		}
 	}
 }
