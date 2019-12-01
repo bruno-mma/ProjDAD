@@ -93,6 +93,10 @@ namespace PuppetMaster
 				case "status":
 					Status();
 					break;
+
+                case "crash":
+                    CrashServer(arguments);
+                    break;
 					
 
 				default:
@@ -189,6 +193,11 @@ namespace PuppetMaster
 		{
 			_puppetMaster.PrintStatus();
 		}
+
+        private void CrashServer(List<string> arguments)
+        {
+            _puppetMaster.CrashServer(arguments[1]);
+        }
 	}
 }
 
