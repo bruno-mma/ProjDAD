@@ -24,6 +24,8 @@ namespace Server
 
 		public bool Closed { get => this._meetingData._closed; set => this._meetingData._closed = value; }
 
+		public bool Canceled { get => this._meetingData._canceled; set => this._meetingData._canceled = value; }
+
 		public Dictionary<string, List<string>> MeetingRecords { get => this._meetingData._meetingRecords; set => this._meetingData._meetingRecords = value; }
 
 
