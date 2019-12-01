@@ -46,40 +46,48 @@ namespace PuppetMaster
 			}
 
 
-			switch (arguments[0])
+			switch (arguments[0].ToLower())
 			{
 				case "quit":
 				case "exit":
 					Environment.Exit(0);
 					break;
 
-				case "Client":
+				case "client":
 					StartClient(arguments);
 					break;
 
-				case "Server":
+				case "server":
 					StartServer(arguments);
 					break;
 
-				case "AddRoom":
+				case "addroom":
 					AddRoom(arguments);
 					break;
 
 				//AddPCS IP
-				case "AddPCS":
+				case "addpcs":
 					AddPCS(arguments);
 					break;
 
-				case "Wait":
+				case "wait":
 					Wait(arguments);
 					break;
 
-				case "Freeze":
+				case "freeze":
 					Freeze(arguments);
 					break;
 
-				case "Unfreeze":
+				case "unfreeze":
 					Unfreeze(arguments);
+					break;
+
+				case "run":
+					RunScript(arguments, false);
+					break;
+
+				case "runp":
+					RunScript(arguments, true);
 					break;
 
 				default:
@@ -136,5 +144,41 @@ namespace PuppetMaster
 
 			_puppetMaster.UnfreezeServer(arguments[1]);
 		}
+
+		private void RunScript(List<string> arguments, bool pause)
+		{
+			if (WrongArgumentCount(arguments, 1)) return;
+
+			try
+			{
+				//assuming script is inside the solution folder
+				string[] lines = System.IO.File.ReadAllLines(@"..\..\..\" + arguments[1] + ".txt");
+
+				foreach (string line in lines)
+				{
+					if (pause)
+					{
+						Console.WriteLine("Press enter to run Command:" + line);
+						Console.ReadLine();
+					}
+					else
+					{
+						Console.WriteLine("Running Command: " + line);
+					}
+
+					this.ParseExecute(line);
+					Console.WriteLine();
+				}
+
+				Console.Write("Finished script execution.");
+			}
+			catch (System.IO.FileNotFoundException)
+			{
+				Console.Write("PuppetMasterParser: " +  arguments[1] + ".txt File not found.");
+			}
+
+			Console.WriteLine(" Reading commands from console");
+		}
 	}
 }
+
