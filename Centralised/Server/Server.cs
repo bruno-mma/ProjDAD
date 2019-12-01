@@ -192,6 +192,12 @@ namespace Server
 
 			Meeting meeting = _meetings[meeting_topic];
 
+			//if meeting was canceled, cant close it
+			if (meeting.Canceled)
+			{
+				return "Error: Meeting " + meeting_topic + " was canceled, cannot close meeting";
+			}
+
 			//if meeting is already closed, cant close again
 			if (meeting.Closed)
 			{
@@ -201,7 +207,7 @@ namespace Server
 			//only meeting owner can close a meeting
 			if (meeting.MeetingOwner != client_name)
 			{
-				return "Error: Only " + meeting.MeetingOwner + " can close meeting " + meeting_topic;
+				return "Error: Only meeting owner (" + meeting.MeetingOwner + ") can close meeting " + meeting_topic;
 			}
 
 
@@ -259,8 +265,8 @@ namespace Server
 			//if no room is available, cant close the meeting
 			if (available_rooms.Count == 0)
 			{
-				//TODO: cancel meeting
-				return "Error: no room available, canceling meeting";
+				meeting.Canceled = true;
+				return "Error: no room available at selected dates, canceling meeting";
 			}
 
 			Room selected_room = available_rooms[0];
