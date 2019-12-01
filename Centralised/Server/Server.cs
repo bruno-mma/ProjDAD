@@ -177,7 +177,7 @@ namespace Server
 		}
 
 
-		public bool CloseMeeting(string client_name, string meeting_topic)
+		public string CloseMeeting(string client_name, string meeting_topic)
 		{
 			if (_frozen)
 			{
@@ -187,16 +187,44 @@ namespace Server
 			//if meeting does not exist, cant close it
 			if (!_meetings.ContainsKey(meeting_topic))
 			{
-				return false;
+				return "Error: Meeting " + meeting_topic + " does not exist";
 			}
 
 			Meeting meeting = _meetings[meeting_topic];
 
+			//if meeting is already closed, cant close again
+			if (meeting.Closed)
+			{
+				return "Error: Meeting " + meeting_topic + " already closed";
+			}
+
 			//only meeting owner can close a meeting
 			if (meeting.MeetingOwner != client_name)
 			{
-				return false;
+				return "Error: Only " + meeting.MeetingOwner + " can close meeting " + meeting_topic;
 			}
+
+
+
+			bool minimum_attending = false;
+
+			// check if there is at least one location with sufficient interested users
+			foreach (KeyValuePair<string, List<string>> kvp in meeting.MeetingRecords)
+			{
+				List<string> interested_users = kvp.Value;
+
+				if (interested_users.Count >= meeting.MinAttendees)
+				{
+					minimum_attending = true;
+					break;
+				}
+			}
+
+			if (!minimum_attending)
+			{
+				return "Error: No location has the minimum number of interested users, cannot close meeting";
+			}
+
 
 			List<Room> available_rooms = new List<Room>();
 			List<string> available_dates = new List<string>();
@@ -231,8 +259,8 @@ namespace Server
 			//if no room is available, cant close the meeting
 			if (available_rooms.Count == 0)
 			{
-				//TODO: maybe cancel meeting?
-				return false;
+				//TODO: cancel meeting
+				return "Error: no room available, canceling meeting";
 			}
 
 			Room selected_room = available_rooms[0];
@@ -267,10 +295,18 @@ namespace Server
 			//update clients
 			UpdateMeetingInvolvedClients(meeting);
 
-			return true;
+			string client_print_message = "Successfully closed meeting " + meeting_topic + " at room " + meeting.SelectedRoom + " at date " + meeting.SelectedDate + ", with users:";
+			client_print_message += Environment.NewLine;
+
+			foreach (string user in meeting.SelectedUsers)
+			{
+				client_print_message += user + " ";
+			}
+
+			return client_print_message;
 		}
 
-		public bool CreateMeeting
+		public string CreateMeeting
 			(string owner_name, string meeting_topic, int min_attendees, int number_of_slots, int number_of_invitees, List<string> slots, List<string> invitees)
 		{
 			if (_frozen)
@@ -281,7 +317,7 @@ namespace Server
 			//meeting topic has to be unique
 			if (_meetings.ContainsKey(meeting_topic))
 			{
-				return false;
+				return "Error: meeting with topic " + meeting_topic + " already exists, cannot create meeting";
 			}
 
 			bool valid_spot = false;
@@ -305,7 +341,7 @@ namespace Server
 			//if no valid spot was given, meeting cant be created
 			if (!valid_spot)
 			{
-				return false;
+				return "Error: no valid location was given, cannot create meeting";
 			}
 
 
@@ -335,10 +371,28 @@ namespace Server
 
 			UpdateMeetingInvolvedClients(meeting);
 
-			return true;
+
+			string client_print_message = "Created a meeting with topic: " + meeting_topic + ", with " + min_attendees + " required atendees, with slots: ";
+
+			foreach (string slot in slots)
+			{
+				client_print_message += slot + " ";
+			}
+
+			if (number_of_invitees < 0)
+			{
+				client_print_message += "and invitees: ";
+
+				foreach (string invitee in invitees)
+				{
+					client_print_message += invitee + " ";
+				}
+			}
+
+			return client_print_message;
 		}
 
-		public bool JoinMeeting(string client_name, string meeting_topic, int slot_count, List<string> slots)
+		public string JoinMeeting(string client_name, string meeting_topic, int slot_count, List<string> slots)
 		{
 			if (_frozen)
 			{
@@ -348,7 +402,7 @@ namespace Server
 			//if meeting does not exist, user cannot join
 			if (!_meetings.ContainsKey(meeting_topic))
 			{
-				return false;
+				return "Error: meeting " + meeting_topic + " does not exist, cannot join";
 			}
 
 			Meeting meeting = _meetings[meeting_topic];
@@ -356,13 +410,13 @@ namespace Server
 			//if meeting is closed, user cannot join
 			if (meeting.Closed)
 			{
-				return false;
+				return "Error: meeting " + meeting_topic + " is closed, cannot join";
 			}
 
 			//if meeting is invitees only, and user is not invited, user cannot join
 			if (meeting.NumberOfInvitees > 0 && !meeting.Invitees.Contains(client_name))
 			{
-				return false;
+				return "Error: user is not invited to this meeting, cannot join";
 			}
 
 			bool joined = false;
@@ -383,7 +437,7 @@ namespace Server
 				UpdateMeetingInvolvedClients(meeting);
 			}
 
-			return joined;
+			return "Joined meeting with topic: " + meeting_topic;
 		}
 
 		public void SetRooms(Dictionary<string, Location> locations)

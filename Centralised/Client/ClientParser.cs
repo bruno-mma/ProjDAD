@@ -178,7 +178,9 @@ namespace Client
 					{
 						Console.WriteLine("Running Command: " + line);
 					}
+
 					this.ParseExecute(line);
+					Console.WriteLine();
 				}
 
 				Console.Write("Finished script execution.");

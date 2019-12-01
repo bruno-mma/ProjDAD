@@ -26,6 +26,7 @@ namespace Client
 			while (true)
 			{
 				parser.ParseExecute(Console.ReadLine());
+				Console.WriteLine();
 			}
 		}
 	}
@@ -74,71 +75,16 @@ namespace Client
 		{
 			//(Distributed version) Aditional logic will needed to determine if this meeting data is actualy more recent than the one already saved
 			_knownMeetings[meeting_topic] = meetingData;
-
-			string slots = "slots ";
-
-			foreach (KeyValuePair<string, List<string>> kvp in meetingData._meetingRecords)
-			{
-				string slot = kvp.Key;
-				List<string> users = kvp.Value;
-
-				slots += slot + ": ";
-
-				foreach (string user in users)
-				{
-					slots += user + " ";
-				}
-
-				slots += Environment.NewLine;
-			}
 		}
 
 		public void CreateMeeting(string meeting_topic, int min_attendees, int number_of_slots, int number_of_invitees, List<string> slots, List<string> invitees)
 		{
-			bool successful = _server.CreateMeeting(_name, meeting_topic, min_attendees, number_of_slots, number_of_invitees, slots, invitees);
-
-			if (successful)
-			{
-				string print = "Created a meeting with topic: " + meeting_topic + ", with " + min_attendees + " required atendees, with slots: ";
-
-				foreach (string slot in slots)
-				{
-					print += slot + " ";
-				}
-
-				if (number_of_invitees < 0)
-				{
-					print += "and invitees: ";
-
-					foreach (string invitee in invitees)
-					{
-						print += invitee + " ";
-					}
-				}
-
-				Console.WriteLine(print);
-			}
-
-			else
-			{
-				Console.WriteLine("Error: Meeting creation failed");
-			}
+			Console.WriteLine(_server.CreateMeeting(_name, meeting_topic, min_attendees, number_of_slots, number_of_invitees, slots, invitees));
 		}
 
 		public void Join(string meeting_topic, int number_of_slots, List<string> slots)
 		{
-			bool successful = _server.JoinMeeting(_name, meeting_topic, number_of_slots, slots);
-
-			if (successful)
-			{
-				string print = "Joined meeting with topic: " + meeting_topic + ".";
-				Console.WriteLine(print);
-			}
-
-			else
-			{
-				Console.WriteLine("Error: Cannot join meeting");
-			}
+			Console.WriteLine(_server.JoinMeeting(_name, meeting_topic, number_of_slots, slots));
 		}
 
 		//TODO: print something different if meeting was canceled
@@ -204,25 +150,7 @@ namespace Client
 
 		public void CloseMeeting(string meeting_topic)
 		{
-			bool successful = _server.CloseMeeting(_name, meeting_topic);
-			MeetingData meetingData = _knownMeetings[meeting_topic];
-
-			if (successful)
-			{
-				string print = "Successfully closed meeting " + meeting_topic + " at room " + meetingData._selectedRoom + " at date " + meetingData._selectedDate + ", with users:";
-				Console.WriteLine(print);
-
-				string users = "";
-				foreach (string user in meetingData._selectedUsers)
-				{
-					users += user + " ";
-				}
-				Console.WriteLine(users);
-			}
-			else
-			{
-				Console.WriteLine("Error: Cannot close meeting");
-			}
+			Console.WriteLine(_server.CloseMeeting(_name, meeting_topic));
 		}
 	}
 }

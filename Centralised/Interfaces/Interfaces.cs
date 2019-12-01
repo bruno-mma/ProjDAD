@@ -4,11 +4,11 @@ namespace Interfaces
 {
 	public interface IServer
 	{
-		bool CreateMeeting(string owner_name, string meeting_topic, int min_attendees, int number_of_slots, int number_of_invitees, List<string> slots, List<string> invitees);
+		string CreateMeeting(string owner_name, string meeting_topic, int min_attendees, int number_of_slots, int number_of_invitees, List<string> slots, List<string> invitees);
 
-		bool JoinMeeting(string client_name, string meeting_topic, int slot_count, List<string> slots);
+		string JoinMeeting(string client_name, string meeting_topic, int slot_count, List<string> slots);
 
-		bool CloseMeeting(string client_name, string meeting_topic);
+		string CloseMeeting(string client_name, string meeting_topic);
 
 		bool AddClient(string client_URL, string client_name);
 
