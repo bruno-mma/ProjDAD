@@ -17,6 +17,8 @@ namespace Interfaces
         void Freeze();
 
         void Unfreeze();
+
+		bool IsFrozen();
 	}
 
 	public interface IClient

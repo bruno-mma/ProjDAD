@@ -29,6 +29,7 @@ namespace PCS
 		public void StartClient(string name, string user_URL, string server_URL, string script_file)
 		{
 			string path = @"..\..\..\" + @"\Client\bin\Debug\Client.exe";
+			Console.WriteLine("PCS: Starting client at " + user_URL + ", will connect with server at: " + server_URL);
 			Process.Start(path, name + " " + user_URL + " " + server_URL + " " + script_file);
 		}
 

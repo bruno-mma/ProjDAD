@@ -87,6 +87,11 @@ namespace Server
 			return null;
 		}
 
+		public bool IsFrozen()
+		{
+			return _frozen;
+		}
+
 		public void DelayMessage()
 		{
 			if (_maxDelay != 0 && _minDelay != 0)

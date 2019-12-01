@@ -31,6 +31,7 @@ namespace PuppetMaster
 				{
 					Console.WriteLine("Running Command: " + line);
 					puppetMasterParser.ParseExecute(line);
+					Console.WriteLine();
 				}
 
 				Console.Write("Finished config file execution. ");
@@ -45,8 +46,8 @@ namespace PuppetMaster
 
 			while (true)
 			{
-				string command = Console.ReadLine();
-				puppetMasterParser.ParseExecute(command);
+				puppetMasterParser.ParseExecute(Console.ReadLine());
+				Console.WriteLine();
 			}
 		}
 	}
@@ -148,6 +149,27 @@ namespace PuppetMaster
 			Console.WriteLine("Unfreezing server " + server_id);
 
 			_servers[server_id].Unfreeze();
+		}
+
+		public void PrintStatus()
+		{
+			//TODO: servers could also print their own view of the system.
+
+			Console.WriteLine("Status:");
+
+			foreach (KeyValuePair<string, IServer> kvp in _servers)
+			{
+				Console.Write("Server: " + kvp.Key + " -> ");
+				if (kvp.Value.IsFrozen())
+				{
+					Console.WriteLine("Frozen");
+				}
+
+				else
+				{
+					Console.WriteLine("Running");
+				}
+			}
 		}
 	}
 }
