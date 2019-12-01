@@ -31,7 +31,7 @@ namespace Client
 				return;
 			}
 
-			switch (arguments[0])
+			switch (arguments[0].ToLower())
 			{
 				case "quit":
 				case "exit":
@@ -187,7 +187,7 @@ namespace Client
 			}
 			catch (System.IO.FileNotFoundException)
 			{
-				Console.Write("ClientParser: File not found: " + arguments[1]);
+				Console.Write("ClientParser: " + arguments[1] + ".txt File not found.");
 			}
 
 			Console.WriteLine(" Reading commands from console");
