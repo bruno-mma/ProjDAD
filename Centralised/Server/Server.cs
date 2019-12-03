@@ -1,6 +1,7 @@
 ﻿using Interfaces;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Runtime.Remoting;
 using System.Runtime.Remoting.Channels;
 using System.Runtime.Remoting.Channels.Tcp;
@@ -43,7 +44,11 @@ namespace Server
 				RemotingServices.Marshal(server, URI, typeof(IServer));
 
 				Console.WriteLine("Server running at " + args[1]);
+
+				server.AddServerURLToFile(args[0], args[1]);
 			}
+
+			Console.ReadLine();
 		}
 	}
 
@@ -68,6 +73,8 @@ namespace Server
 		//Room locations, key is location name
 		private Dictionary<string, Location> _locations = new Dictionary<string, Location>();
 
+		private readonly string serverURLsPath = @"..\..\..\" + "serverURLs.txt";
+
 		public Server(string server_id, int max_faults, int min_delay, int max_delay)
 		{
 			_id = server_id;
@@ -79,6 +86,14 @@ namespace Server
 
 		public Server() : this("s1", 0, 0, 0)
 		{
+		}
+
+		public void AddServerURLToFile(string server_id, string server_URL)
+		{
+			using (StreamWriter sw = File.AppendText(serverURLsPath))
+			{
+				sw.WriteLine(server_id + ' ' + server_URL);
+			}
 		}
 
 		public override object InitializeLifetimeService()
@@ -122,6 +137,8 @@ namespace Server
 
 		public bool AddClient(string client_URL, string client_name)
 		{
+			DelayMessage();
+
 			if (_frozen)
 			{
 				_messageBacklog.Add(() => AddClient(client_URL, client_name));
@@ -185,9 +202,13 @@ namespace Server
 
 		public string CloseMeeting(string client_name, string meeting_topic)
 		{
+			DelayMessage();
+
 			if (_frozen)
 			{
 				_messageBacklog.Add(() => CloseMeeting(client_name, meeting_topic));
+
+				return "";
 			}
 
 			//if meeting does not exist, cant close it
@@ -321,9 +342,13 @@ namespace Server
 		public string CreateMeeting
 			(string owner_name, string meeting_topic, int min_attendees, int number_of_slots, int number_of_invitees, List<string> slots, List<string> invitees)
 		{
+			DelayMessage();
+
 			if (_frozen)
 			{
 				_messageBacklog.Add(() => CreateMeeting(owner_name, meeting_topic, min_attendees, number_of_slots, number_of_invitees, slots, invitees));
+
+				return "";
 			}
 
 			//meeting topic has to be unique
@@ -406,9 +431,13 @@ namespace Server
 
 		public string JoinMeeting(string client_name, string meeting_topic, int slot_count, List<string> slots)
 		{
+			DelayMessage();
+
 			if (_frozen)
 			{
 				_messageBacklog.Add(() => JoinMeeting(client_name, meeting_topic, slot_count, slots));
+
+				return "";
 			}
 
 			//if meeting does not exist, user cannot join

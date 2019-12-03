@@ -1,6 +1,7 @@
 ﻿using Interfaces;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Runtime.Remoting;
 using System.Runtime.Remoting.Channels;
 using System.Runtime.Remoting.Channels.Tcp;
@@ -33,6 +34,8 @@ namespace Client
 
 	public class Client : MarshalByRefObject, IClient
 	{
+		private readonly string clientURLsPath = @"..\..\..\" + "clientURLs.txt";
+
 		private string _name;
 		private IServer _server;
 
@@ -41,6 +44,14 @@ namespace Client
 		public override object InitializeLifetimeService()
 		{
 			return null;
+		}
+
+		private void AddClientURLToFile(string client_URL)
+		{
+			using (StreamWriter sw = File.AppendText(clientURLsPath))
+			{
+				sw.WriteLine(client_URL);
+			}
 		}
 
 
@@ -69,6 +80,8 @@ namespace Client
 			server.AddClient(user_URL, _name);
 
 			Console.WriteLine("Connected as user " + name + " to server at " + server_URL);
+
+			AddClientURLToFile(user_URL);
 		}
 
 		public void UpdateMeeting(string meeting_topic, MeetingData meetingData)

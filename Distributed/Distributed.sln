@@ -8,6 +8,10 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Interfaces", "Interfaces\Interfaces.csproj", "{D5D43A3C-E3CC-41B4-AAF1-8A31EB667CF3}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PuppetMaster", "PuppetMaster\PuppetMaster.csproj", "{1CE1281F-5895-4C80-92C1-A822105B3250}"
+	ProjectSection(ProjectDependencies) = postProject
+		{EE002C8E-8B44-448D-BFFC-9D2BEE80E91E} = {EE002C8E-8B44-448D-BFFC-9D2BEE80E91E}
+		{F2B3DDAD-DF8F-423B-83B2-CE3A868002EC} = {F2B3DDAD-DF8F-423B-83B2-CE3A868002EC}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Client", "Client\Client.csproj", "{EE002C8E-8B44-448D-BFFC-9D2BEE80E91E}"
 EndProject

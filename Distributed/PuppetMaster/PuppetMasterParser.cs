@@ -53,10 +53,12 @@ namespace PuppetMaster
 					Environment.Exit(0);
 					break;
 
+				// Async
 				case "client":
 					StartClient(arguments);
 					break;
 
+				// Async
 				case "server":
 					StartServer(arguments);
 					break;
@@ -65,19 +67,16 @@ namespace PuppetMaster
 					AddRoom(arguments);
 					break;
 
-				//AddPCS IP
-				case "addpcs":
-					AddPCS(arguments);
-					break;
-
 				case "wait":
 					Wait(arguments);
 					break;
 
+				// Async
 				case "freeze":
 					Freeze(arguments);
 					break;
 
+				// Async
 				case "unfreeze":
 					Unfreeze(arguments);
 					break;
@@ -93,6 +92,10 @@ namespace PuppetMaster
 				case "status":
 					Status();
 					break;
+
+				case "crash":
+					CrashServer(arguments);
+					break;
 					
 
 				default:
@@ -105,14 +108,31 @@ namespace PuppetMaster
 		{
 			if (WrongArgumentCount(arguments, 4)) return;
 
-			_puppetMaster.StartClient(arguments[1], arguments[2], arguments[3], arguments[4]);
+			//_puppetMaster.StartClient(arguments[1], arguments[2], arguments[3], arguments[4]);
+
+			// Create delegate to remote method
+			PuppetMaster.RemoteAsyncStartClientDelegate RemoteDel = new PuppetMaster.RemoteAsyncStartClientDelegate(_puppetMaster.StartClient);
+
+			// Dont need invocation result so no callback function
+
+			// Call remote method
+			RemoteDel.BeginInvoke(arguments[1], arguments[2], arguments[3], arguments[4], null, null);
 		}
 
 		private void StartServer(List<string> arguments)
 		{
 			if (WrongArgumentCount(arguments, 5)) return;
 
-			_puppetMaster.StartServer(arguments[1], arguments[2], Int32.Parse(arguments[3]), Int32.Parse(arguments[4]), Int32.Parse(arguments[5]));
+			//_puppetMaster.StartServer(arguments[1], arguments[2], Int32.Parse(arguments[3]), Int32.Parse(arguments[4]), Int32.Parse(arguments[5]));
+
+			// Create delegate to remote method
+			PuppetMaster.RemoteAsyncStartServerDelegate RemoteDel = new PuppetMaster.RemoteAsyncStartServerDelegate(_puppetMaster.StartServer);
+
+			// Create delegate to local callback
+			AsyncCallback RemoteCallback = new AsyncCallback(PuppetMaster.StartServerCallBack);
+
+			// Call remote method
+			RemoteDel.BeginInvoke(arguments[1], arguments[2], Int32.Parse(arguments[3]), Int32.Parse(arguments[4]), Int32.Parse(arguments[5]), RemoteCallback, null);
 		}
 
 		private void AddRoom(List<string> arguments)
@@ -129,25 +149,50 @@ namespace PuppetMaster
 			Thread.Sleep(Int32.Parse(arguments[1]));
 		}
 
-		private void AddPCS(List<string> arguments)
-		{
-			if (WrongArgumentCount(arguments, 1)) return;
-
-			_puppetMaster.AddPCS(arguments[1]);
-		}
-
 		private void Freeze(List<string> arguments)
 		{
 			if (WrongArgumentCount(arguments, 1)) return;
 
-			_puppetMaster.FreezeServer(arguments[1]);
+			//_puppetMaster.FreezeServer(arguments[1]);
+
+			// Create delegate to remote method
+			PuppetMaster.RemoteAsyncFreezeDelegate RemoteDel = new PuppetMaster.RemoteAsyncFreezeDelegate(_puppetMaster.FreezeServer);
+
+			// Create delegate to local callback
+			AsyncCallback RemoteCallback = new AsyncCallback(PuppetMaster.FreezeCallBack);
+
+			// Call remote method
+			RemoteDel.BeginInvoke(arguments[1], RemoteCallback, null);
 		}
 
 		private void Unfreeze(List<string> arguments)
 		{
 			if (WrongArgumentCount(arguments, 1)) return;
 
-			_puppetMaster.UnfreezeServer(arguments[1]);
+			//_puppetMaster.UnfreezeServer(arguments[1]);
+
+			// Create delegate to remote method
+			PuppetMaster.RemoteAsyncFreezeDelegate RemoteDel = new PuppetMaster.RemoteAsyncFreezeDelegate(_puppetMaster.UnfreezeServer);
+
+			// Create delegate to local callback
+			AsyncCallback RemoteCallback = new AsyncCallback(PuppetMaster.FreezeCallBack);
+
+			// Call remote method
+			RemoteDel.BeginInvoke(arguments[1], RemoteCallback, null);
+		}
+
+		private void Status()
+		{
+			//_puppetMaster.PrintStatus();
+
+			// Create delegate to remote method
+			PuppetMaster.RemoteAsyncStatusDelegate RemoteDel = new PuppetMaster.RemoteAsyncStatusDelegate(_puppetMaster.PrintStatus);
+
+			// Create delegate to local callback
+			AsyncCallback RemoteCallback = new AsyncCallback(PuppetMaster.StatusCallBack);
+
+			// Call remote method
+			RemoteDel.BeginInvoke(RemoteCallback, null);
 		}
 
 		private void RunScript(List<string> arguments, bool pause)
@@ -185,9 +230,11 @@ namespace PuppetMaster
 			Console.WriteLine(" Reading commands from console");
 		}
 
-		private void Status()
+		private void CrashServer(List<string> arguments)
 		{
-			_puppetMaster.PrintStatus();
+			if (WrongArgumentCount(arguments, 1)) return;
+
+			_puppetMaster.CrashServer(arguments[1]);
 		}
 	}
 }

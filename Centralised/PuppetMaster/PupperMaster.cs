@@ -66,14 +66,24 @@ namespace PuppetMaster
 		//Room locations, key is location name
 		private Dictionary<string, Location> _locations = new Dictionary<string, Location>();
 
+		private readonly string clientURLsPath = @"..\..\..\" + "clientURLs.txt";
+		private readonly string serverURLsPath = @"..\..\..\" + "serverURLs.txt";
+
 		public PuppetMaster()
 		{
 			_PCSs.Add("localhost", new PCS.PCS());
+
+			//check if server or clien URL files exist, if so delete them
+			if (File.Exists(clientURLsPath))
+			{
+				File.Delete(clientURLsPath);
+			}
+
+			if (File.Exists(serverURLsPath))
+			{
+				File.Delete(serverURLsPath);
+			}
 		}
-
-		//TODO: All PuppetMaster commands should be executed asynchronously except for the Wait command.
-
-
 
 		// Delegates for async PuppetMaster operations
 		public delegate string RemoteAsyncStartServerDelegate(string id, string server_URL, int max_faults, int min_delay, int max_delay);
@@ -88,17 +98,13 @@ namespace PuppetMaster
 		// Async
 		public void StartClient(string name, string user_URL, string server_URL, string script_file)
 		{
-			string ip = URL.GetIP(user_URL);
-
-			_PCSs[ip].StartClient(name, user_URL, server_URL, script_file);
+			GetPCS(server_URL).StartClient(name, user_URL, server_URL, script_file);
 		}
 
 		// Async
 		public string StartServer(string id, string server_URL, int max_faults, int min_delay, int max_delay)
 		{
-			string ip = URL.GetIP(server_URL);
-
-			_PCSs[ip].StartServer(id, server_URL, max_faults, min_delay, max_delay);
+			GetPCS(server_URL).StartServer(id, server_URL, max_faults, min_delay, max_delay);
 
 			IServer server = (IServer)Activator.GetObject(typeof(IServer), server_URL);
 
@@ -125,9 +131,14 @@ namespace PuppetMaster
 			_locations[location]._rooms.Add(name, new Room(location, name, capacity));
 		}
 
-		public void AddPCS(string ip)
+		private IPCS GetPCS(string pcs_URL)
 		{
-			string pcs_URL = "tcp://" + ip + ":10000/PCS";
+			string ip = URL.GetIP(pcs_URL);
+
+			if (_PCSs.ContainsKey(ip))
+			{
+				return _PCSs[ip];
+			}
 
 			IPCS pcs = (IPCS)Activator.GetObject(typeof(IPCS), pcs_URL);
 
@@ -135,12 +146,14 @@ namespace PuppetMaster
 			if (pcs == null)
 			{
 				Console.WriteLine("Failed to connect to PCS at " + pcs_URL);
-				return;
+				return null;
 			}
+
+			Console.WriteLine("Connected to PCS at " + pcs_URL);
 
 			_PCSs.Add(ip, pcs);
 
-			Console.WriteLine("Connected to PCS at " + pcs_URL);
+			return pcs;
 		}
 
 		public string FreezeServer(string server_id)

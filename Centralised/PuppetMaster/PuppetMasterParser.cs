@@ -67,10 +67,6 @@ namespace PuppetMaster
 					AddRoom(arguments);
 					break;
 
-				case "addpcs":
-					AddPCS(arguments);
-					break;
-
 				case "wait":
 					Wait(arguments);
 					break;
@@ -153,13 +149,6 @@ namespace PuppetMaster
 			Thread.Sleep(Int32.Parse(arguments[1]));
 		}
 
-		private void AddPCS(List<string> arguments)
-		{
-			if (WrongArgumentCount(arguments, 1)) return;
-
-			_puppetMaster.AddPCS(arguments[1]);
-		}
-
 		private void Freeze(List<string> arguments)
 		{
 			if (WrongArgumentCount(arguments, 1)) return;
@@ -239,11 +228,6 @@ namespace PuppetMaster
 			}
 
 			Console.WriteLine(" Reading commands from console");
-		}
-	
-		private void Status()
-		{
-			_puppetMaster.PrintStatus();
 		}
 
 		private void CrashServer(List<string> arguments)
