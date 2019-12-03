@@ -117,6 +117,8 @@ namespace Server
 			{
 				message.DynamicInvoke();
 			}
+
+			_messageBacklog = new List<Action>();
 		}
 
 		public bool AddClient(string client_URL, string client_name)

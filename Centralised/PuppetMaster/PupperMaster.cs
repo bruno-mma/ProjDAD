@@ -4,6 +4,7 @@ using System.IO;
 using Interfaces;
 using System.Runtime.Remoting.Channels.Tcp;
 using System.Runtime.Remoting.Channels;
+using System.Runtime.Remoting.Messaging;
 
 namespace PuppetMaster
 {
@@ -34,12 +35,12 @@ namespace PuppetMaster
 					Console.WriteLine();
 				}
 
-				Console.Write("Finished config file execution. ");
+				Console.WriteLine("Finished config file execution");
 			}
 
 			catch (FileNotFoundException)
 			{
-				Console.Write("No configuration file provided. ");
+				Console.WriteLine("No configuration file provided");
 			}
 
 			Console.WriteLine("Reading commands from console");
@@ -72,6 +73,19 @@ namespace PuppetMaster
 
 		//TODO: All PuppetMaster commands should be executed asynchronously except for the Wait command.
 
+
+
+		// Delegates for async PuppetMaster operations
+		public delegate string RemoteAsyncStartServerDelegate(string id, string server_URL, int max_faults, int min_delay, int max_delay);
+
+		public delegate void RemoteAsyncStartClientDelegate(string name, string user_URL, string server_URL, string script_file);
+
+		public delegate string RemoteAsyncFreezeDelegate(string server_id);
+
+		public delegate string RemoteAsyncStatusDelegate();
+
+
+		// Async
 		public void StartClient(string name, string user_URL, string server_URL, string script_file)
 		{
 			string ip = URL.GetIP(user_URL);
@@ -79,7 +93,8 @@ namespace PuppetMaster
 			_PCSs[ip].StartClient(name, user_URL, server_URL, script_file);
 		}
 
-		public void StartServer(string id, string server_URL, int max_faults, int min_delay, int max_delay)
+		// Async
+		public string StartServer(string id, string server_URL, int max_faults, int min_delay, int max_delay)
 		{
 			string ip = URL.GetIP(server_URL);
 
@@ -90,16 +105,15 @@ namespace PuppetMaster
 			//weak check
 			if (server == null)
 			{
-				Console.WriteLine("Failed to connect to server at " + server_URL);
+				return "PuppetMaster: Failed to connect to server at " + server_URL;
 			}
-			else
-			{
-				Console.WriteLine("Connected to server at " + server_URL);
-			}
-
+			
 			_servers[id] = server;
 			server.SetRooms(_locations);
+
+			return "PuppetMaster: Connected to server at " + server_URL;
 		}
+
 
 		public void AddRoom(string location, string name, int capacity)
 		{
@@ -109,13 +123,6 @@ namespace PuppetMaster
 			}
 
 			_locations[location]._rooms.Add(name, new Room(location, name, capacity));
-		}
-
-		public void AddServer(string server_id, IServer server)
-		{
-			_servers.Add(server_id, server);
-
-			server.SetRooms(_locations);
 		}
 
 		public void AddPCS(string ip)
@@ -128,48 +135,84 @@ namespace PuppetMaster
 			if (pcs == null)
 			{
 				Console.WriteLine("Failed to connect to PCS at " + pcs_URL);
-			}
-			else
-			{
-				Console.WriteLine("Connected to PCS at " + pcs_URL);
+				return;
 			}
 
 			_PCSs.Add(ip, pcs);
+
+			Console.WriteLine("Connected to PCS at " + pcs_URL);
 		}
 
-		public void FreezeServer(string server_id)
+		public string FreezeServer(string server_id)
 		{
-			Console.WriteLine("Freezing server " + server_id);
-
 			_servers[server_id].Freeze();
+
+			return "Freezing server " + server_id;
 		}
 
-		public void UnfreezeServer(string server_id)
+		public string UnfreezeServer(string server_id)
 		{
-			Console.WriteLine("Unfreezing server " + server_id);
-
 			_servers[server_id].Unfreeze();
+
+			return "Unfreezing server " + server_id;
 		}
 
-		public void PrintStatus()
+		public string PrintStatus()
 		{
 			//TODO: servers could also print their own view of the system.
 
-			Console.WriteLine("Status:");
+			string print = "Status:" + Environment.NewLine;
 
 			foreach (KeyValuePair<string, IServer> kvp in _servers)
 			{
-				Console.Write("Server: " + kvp.Key + " -> ");
+				print += "Server: " + kvp.Key + " -> ";
+
 				if (kvp.Value.IsFrozen())
 				{
-					Console.WriteLine("Frozen");
+					print += "Frozen";
 				}
-
 				else
 				{
-					Console.WriteLine("Running");
+					print += "Running";
 				}
+
+				print += Environment.NewLine;
 			}
+
+			return print;
 		}
+
+		public static void StartServerCallBack(IAsyncResult result)
+		{
+			//Use the callback to get the return value
+			RemoteAsyncStartServerDelegate del = (RemoteAsyncStartServerDelegate)((AsyncResult)result).AsyncDelegate;
+
+			Console.WriteLine(del.EndInvoke(result));
+		}
+
+		public static void FreezeCallBack(IAsyncResult result)
+		{
+			//Use the callback to get the return value
+			RemoteAsyncFreezeDelegate del = (RemoteAsyncFreezeDelegate)((AsyncResult)result).AsyncDelegate;
+
+			Console.WriteLine(del.EndInvoke(result));
+		}
+
+		public static void StatusCallBack(IAsyncResult result)
+		{
+			//Use the callback to get the return value
+			RemoteAsyncStatusDelegate del = (RemoteAsyncStatusDelegate)((AsyncResult)result).AsyncDelegate;
+
+			Console.WriteLine(del.EndInvoke(result));
+		}
+
+
+		/*
+		public static void RemoteAsyncStringCallBack(IAsyncResult result)
+		{
+			string print = (string)result.AsyncState;
+			Console.WriteLine(print);
+		}
+		*/
 	}
 }
