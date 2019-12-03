@@ -206,25 +206,16 @@ namespace PuppetMaster
 			Console.WriteLine(del.EndInvoke(result));
 		}
 
-
-		/*
-		public static void RemoteAsyncStringCallBack(IAsyncResult result)
+		public void CrashServer(string server_id)
 		{
-			string print = (string)result.AsyncState;
-			Console.WriteLine(print);
-    }
-		*/
+			Console.WriteLine("Crashing server " + server_id);
 
-      public void CrashServer(string server_id)
-      {
-        Console.WriteLine("Crashing server " + server_id);
 			try
 			{
 			  _servers[server_id].Crash();
 			}
 			//ignoring the exception raised from closing the connection abruptly
 			catch (System.Net.Sockets.SocketException) { }
-
 		}
 	}
 }

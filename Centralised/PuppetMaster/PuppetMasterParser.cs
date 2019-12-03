@@ -97,9 +97,9 @@ namespace PuppetMaster
 					Status();
 					break;
 
-                case "crash":
-                    CrashServer(arguments);
-                    break;
+				case "crash":
+					CrashServer(arguments);
+					break;
 					
 
 				default:
@@ -240,16 +240,18 @@ namespace PuppetMaster
 
 			Console.WriteLine(" Reading commands from console");
 		}
-    
+	
 		private void Status()
 		{
 			_puppetMaster.PrintStatus();
 		}
 
-    private void CrashServer(List<string> arguments)
-    {
-      _puppetMaster.CrashServer(arguments[1]);
-    }
+		private void CrashServer(List<string> arguments)
+		{
+			if (WrongArgumentCount(arguments, 1)) return;
+
+			_puppetMaster.CrashServer(arguments[1]);
+		}
 	}
 }
 
