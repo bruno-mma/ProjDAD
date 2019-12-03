@@ -212,7 +212,19 @@ namespace PuppetMaster
 		{
 			string print = (string)result.AsyncState;
 			Console.WriteLine(print);
-		}
+    }
 		*/
+
+      public void CrashServer(string server_id)
+      {
+        Console.WriteLine("Crashing server " + server_id);
+			try
+			{
+			  _servers[server_id].Crash();
+			}
+			//ignoring the exception raised from closing the connection abruptly
+			catch (System.Net.Sockets.SocketException) { }
+
+		}
 	}
 }
