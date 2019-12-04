@@ -15,38 +15,18 @@ namespace Server
 
 		static void Main(string[] args)
 		{
-			Server server;
+			Server server = new Server(args[0], args[1], Int32.Parse(args[2]), Int32.Parse(args[3]), Int32.Parse(args[4]));
 
-			// non PCS execution
-			if (args.Length == 1)
-			{
-				server = new Server();
+			int port = URL.GetPort(args[1]);
+			string URI = URL.GetURI(args[1]);
 
-				TcpChannel channel = new TcpChannel(_server_port);
-				ChannelServices.RegisterChannel(channel, false);
+			TcpChannel channel = new TcpChannel(port);
+			ChannelServices.RegisterChannel(channel, false);
 
+			RemotingServices.Marshal(server, URI, typeof(IServer));
 
-
-				RemotingServices.Marshal(server, "Server", typeof(IServer));
-			}
-
-			// server started by PCS
-			else
-			{
-				server = new Server(args[0], Int32.Parse(args[2]), Int32.Parse(args[3]), Int32.Parse(args[4]));
-
-				int port = URL.GetPort(args[1]);
-				string URI = URL.GetURI(args[1]);
-
-				TcpChannel channel = new TcpChannel(port);
-				ChannelServices.RegisterChannel(channel, false);
-
-				RemotingServices.Marshal(server, URI, typeof(IServer));
-
-				Console.WriteLine("Server running at " + args[1]);
-
-				server.AddServerURLToFile(args[0], args[1]);
-			}
+			Console.WriteLine("Server running at " + args[1]);
+			server.AddServerURLToFile(args[0], args[1]);
 
 			Console.ReadLine();
 		}
@@ -55,11 +35,14 @@ namespace Server
 	public class Server : MarshalByRefObject, IServer
 	{
 		string _id;
+
 		int _maxFaults;
 		int _minDelay;
 		int _maxDelay;
 
-		private Random _rdn = new Random();
+		string _myURL;
+
+		private readonly Random _rdn = new Random();
 
 		private bool _frozen = false;
 		private List<Action> _messageBacklog = new List<Action>();
@@ -73,26 +56,56 @@ namespace Server
 		//Room locations, key is location name
 		private Dictionary<string, Location> _locations = new Dictionary<string, Location>();
 
+		//key is server URL, if connection is lost then add record to offlineServers
+		private Dictionary<string, IServer> _servers = new Dictionary<string, IServer>();
+
+		//keep track of offline servers, value doesnt matter
+		private Dictionary<string, bool> _offlineServers = new Dictionary<string, bool>();
+
 		private readonly string serverURLsPath = @"..\..\..\" + "serverURLs.txt";
 
-		public Server(string server_id, int max_faults, int min_delay, int max_delay)
+
+		public Server(string server_id, string my_URL, int max_faults, int min_delay, int max_delay)
 		{
 			_id = server_id;
+			_myURL = my_URL;
 
 			_maxFaults = max_faults;
 			_minDelay = min_delay;
 			_maxDelay = max_delay;
 		}
 
-		public Server() : this("s1", 0, 0, 0)
-		{
-		}
-
 		public void AddServerURLToFile(string server_id, string server_URL)
 		{
 			using (StreamWriter sw = File.AppendText(serverURLsPath))
 			{
-				sw.WriteLine(server_id + ' ' + server_URL);
+				sw.WriteLine(server_URL);
+			}
+		}
+
+		//find other/new servers
+		private void UpdateOnlineServers()
+		{
+			//assuming file is inside solution folder
+			string[] serverFileContents = File.ReadAllLines(Path.Combine(@"..\..\..\", "configFile.txt"));
+
+			foreach (string server_URL in serverFileContents)
+			{
+				if (server_URL != _myURL && !_servers.ContainsKey(server_URL) && !_offlineServers.ContainsKey(server_URL))
+				{
+					//get remote server object
+					IServer server = (IServer)Activator.GetObject(typeof(IServer), server_URL);
+
+					//weak check
+					if (server == null)
+					{
+						Console.WriteLine("Could not locate server at " + server_URL);
+						break;
+					}
+
+					Console.WriteLine("Connected to server at " + server_URL);
+					_servers.Add(server_URL, server);
+				}
 			}
 		}
 
