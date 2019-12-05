@@ -41,6 +41,8 @@ namespace Client
 
 		private Dictionary<string, MeetingData> _knownMeetings = new Dictionary<string, MeetingData>();
 
+        PartialView partialView;
+
 		public override object InitializeLifetimeService()
 		{
 			return null;
@@ -82,7 +84,10 @@ namespace Client
 			Console.WriteLine("Connected as user " + name + " to server at " + server_URL);
 
 			AddClientURLToFile(user_URL);
-		}
+
+            // Makes himself available to help disseminate meetings information
+            partialView = new PartialView();
+        }
 
 		public void UpdateMeeting(string meeting_topic, MeetingData meetingData)
 		{
@@ -92,8 +97,12 @@ namespace Client
 
 		public void CreateMeeting(string meeting_topic, int min_attendees, int number_of_slots, int number_of_invitees, List<string> slots, List<string> invitees)
 		{
-			Console.WriteLine(_server.CreateMeeting(_name, meeting_topic, min_attendees, number_of_slots, number_of_invitees, slots, invitees));
-		}
+            string meetingInfo = _server.CreateMeeting(_name, meeting_topic, min_attendees, number_of_slots, number_of_invitees, slots, invitees);
+
+            Console.WriteLine(meetingInfo);
+
+            partialView.DisseminateMessage(meetingInfo);
+        }
 
 		public void Join(string meeting_topic, int number_of_slots, List<string> slots)
 		{

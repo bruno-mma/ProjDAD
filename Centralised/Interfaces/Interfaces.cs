@@ -39,4 +39,10 @@ namespace Interfaces
 
 		void StartClient(string name, string user_URL, string server_URL, string script_file);
 	}
+
+    public interface IPartialView
+    {
+        void SendMessage(string message);
+        void ReceiveMessage();
+    }
 }
