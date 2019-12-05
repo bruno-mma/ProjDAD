@@ -5,6 +5,7 @@ using Interfaces;
 using System.Runtime.Remoting.Channels.Tcp;
 using System.Runtime.Remoting.Channels;
 using System.Runtime.Remoting.Messaging;
+using System.Diagnostics;
 
 namespace PuppetMaster
 {
@@ -20,6 +21,7 @@ namespace PuppetMaster
 
 			TcpChannel channel = new TcpChannel(puppetMaster._port);
 			ChannelServices.RegisterChannel(channel, false);
+		
 
 			try
 			{
@@ -55,6 +57,7 @@ namespace PuppetMaster
 
 	public class PuppetMaster : MarshalByRefObject
 	{
+
 		public readonly int _port = 10001;
 
 		//key is IP
@@ -71,7 +74,9 @@ namespace PuppetMaster
 
 		public PuppetMaster()
 		{
-			_PCSs.Add("localhost", new PCS.PCS());
+			string path = @"..\..\..\" + @"\PCS\bin\Debug\Pcs.exe";
+			Console.WriteLine("Starting Pcs at localhost");
+			Process.Start(path);
 
 			//check if server or clien URL files exist, if so delete them
 			if (File.Exists(clientURLsPath))
@@ -131,29 +136,32 @@ namespace PuppetMaster
 			_locations[location]._rooms.Add(name, new Room(location, name, capacity));
 		}
 
-		private IPCS GetPCS(string pcs_URL)
+		private IPCS GetPCS(string server_URL)
 		{
-			string ip = URL.GetIP(pcs_URL);
+			string pcs_ip = URL.GetIP(server_URL);
 
-			if (_PCSs.ContainsKey(ip))
+			IPCS pcs = (IPCS)Activator.GetObject(typeof(IPCS), "tcp://"+ pcs_ip + ":10000/PCS");
+
+			try
 			{
-				return _PCSs[ip];
+				pcs.LifeCheck();
 			}
-
-			IPCS pcs = (IPCS)Activator.GetObject(typeof(IPCS), pcs_URL);
-
-			//weak check
-			if (pcs == null)
+			catch (System.Net.Sockets.SocketException)
 			{
-				Console.WriteLine("Failed to connect to PCS at " + pcs_URL);
+				Console.WriteLine("MIssing PCS at IP: " + pcs_ip);
 				return null;
 			}
-
-			Console.WriteLine("Connected to PCS at " + pcs_URL);
-
-			_PCSs.Add(ip, pcs);
-
-			return pcs;
+			
+			try
+			{
+				_PCSs.Add(pcs_ip, pcs);
+				Console.WriteLine("New PCS connection: " + "tcp://" + pcs_ip + ":10000/PCS");
+				return pcs;
+			}
+			catch(System.ArgumentException)
+			{
+				return _PCSs[pcs_ip];
+			}		
 		}
 
 		public string FreezeServer(string server_id)

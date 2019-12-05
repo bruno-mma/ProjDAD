@@ -1,5 +1,6 @@
 ﻿using Interfaces;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.Remoting;
 using System.Runtime.Remoting.Channels;
@@ -11,12 +12,15 @@ namespace PCS
 	{
 		static void Main(string[] args)
 		{
+			Console.WriteLine("PCS started");
+			//System.Threading.Thread.Sleep(15000);
 			PCS pcs = new PCS();
 
 			TcpChannel channel = new TcpChannel(PCS._port);
 			ChannelServices.RegisterChannel(channel, false);
 
 			RemotingServices.Marshal(pcs, "PCS", typeof(IPCS));
+			Console.WriteLine("PCS finished starting process");
 
 			Console.ReadLine();
 		}
@@ -25,6 +29,11 @@ namespace PCS
 	public class PCS : MarshalByRefObject, IPCS
 	{
 		public static readonly int _port = 10000;
+
+		public bool LifeCheck()
+		{
+			return true;
+		}
 
 		public void StartClient(string name, string user_URL, string server_URL, string script_file)
 		{

@@ -35,6 +35,7 @@ namespace Interfaces
 
 	public interface IPCS
 	{
+		bool LifeCheck();
 		void StartServer(string server_id, string URL, int max_faults, int min_delay, int max_delay);
 
 		void StartClient(string name, string user_URL, string server_URL, string script_file);
