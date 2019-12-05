@@ -26,7 +26,6 @@ namespace Server
 			RemotingServices.Marshal(server, URI, typeof(IServer));
 
 			Console.WriteLine("Server running at " + args[1]);
-			server.AddServerURLToFile(args[0], args[1]);
 
 			Console.ReadLine();
 		}
@@ -57,13 +56,22 @@ namespace Server
 		private Dictionary<string, Location> _locations = new Dictionary<string, Location>();
 
 		//key is server URL, if connection is lost then add record to offlineServers
-		private Dictionary<string, IServer> _servers = new Dictionary<string, IServer>();
+		public Dictionary<string, IServer> _servers = new Dictionary<string, IServer>();
 
 		//keep track of offline servers, value doesnt matter
 		private Dictionary<string, bool> _offlineServers = new Dictionary<string, bool>();
 
 		private readonly string serverURLsPath = @"..\..\..\" + "serverURLs.txt";
 
+		private bool _executingOperation = false;
+		private bool _executingRemoteOperation = false;
+
+		private object _executingOperationLock = new object();
+		private object _executingRemoteOperationLock = new object();
+
+		public delegate void DistributedJoinDelegate(string client_name, string meeting_topic, int slot_count, List<string> slots, DateTime operation_start);
+
+		public DistributedServerLock _lock;
 
 		public Server(string server_id, string my_URL, int max_faults, int min_delay, int max_delay)
 		{
@@ -73,40 +81,42 @@ namespace Server
 			_maxFaults = max_faults;
 			_minDelay = min_delay;
 			_maxDelay = max_delay;
+
+			_lock = new DistributedServerLock(this, _servers);
 		}
 
-		public void AddServerURLToFile(string server_id, string server_URL)
+		public void TestLock()
 		{
-			using (StreamWriter sw = File.AppendText(serverURLsPath))
+			_lock.AcquireLock();
+
+			for (int i = 0; i < 10; i++)
 			{
-				sw.WriteLine(server_URL);
+				Console.WriteLine("I have the lock");
+				Thread.Sleep(100);
 			}
+
+			_lock.ReleaseLock();
 		}
 
-		//find other/new servers
-		private void UpdateOnlineServers()
+		//used by remote servers to try and adquire the lock
+		public bool AcquireRemoteLock(DateTime time)
 		{
-			//assuming file is inside solution folder
-			string[] serverFileContents = File.ReadAllLines(Path.Combine(@"..\..\..\", "configFile.txt"));
+			DelayMessage();
 
-			foreach (string server_URL in serverFileContents)
+			if (!_lock._locked)
 			{
-				if (server_URL != _myURL && !_servers.ContainsKey(server_URL) && !_offlineServers.ContainsKey(server_URL))
-				{
-					//get remote server object
-					IServer server = (IServer)Activator.GetObject(typeof(IServer), server_URL);
-
-					//weak check
-					if (server == null)
-					{
-						Console.WriteLine("Could not locate server at " + server_URL);
-						break;
-					}
-
-					Console.WriteLine("Connected to server at " + server_URL);
-					_servers.Add(server_URL, server);
-				}
+				_lock._locked = true;
+				return true;
 			}
+
+			return false;	
+		}
+
+		public void ReleaseRemoteLock()
+		{
+			DelayMessage();
+
+			_lock._locked = false;
 		}
 
 		public override object InitializeLifetimeService()
@@ -171,7 +181,7 @@ namespace Server
 				Console.WriteLine("Adding client at: " + client_URL);
 				_clients[client_name] = client;
 
-				UpdateClientAllMeetings(client_name);
+				//UpdateClientAllMeetings(client_name);
 			}
 
 			return true;
@@ -184,7 +194,7 @@ namespace Server
 				foreach (var client in _clients)
 				{
 					client.Value.UpdateMeeting(meeting.MeetingTopic, meeting._meetingData);
-					//Console.WriteLine("Updated client " + client.Key + " with meeting " + meeting.MeetingTopic);
+					Console.WriteLine("Updated client " + client.Key + " with meeting " + meeting.MeetingTopic);
 				}
 			}
 			else
@@ -194,7 +204,7 @@ namespace Server
 					if (_clients.ContainsKey(client_name))
 					{
 						_clients[client_name].UpdateMeeting(meeting.MeetingTopic, meeting._meetingData);
-						//Console.WriteLine("Updated client " + client_name + " with meeting " + meeting.MeetingTopic);
+						Console.WriteLine("Updated client " + client_name + " with meeting " + meeting.MeetingTopic);
 					}
 				}
 			}
@@ -212,6 +222,23 @@ namespace Server
 			}
 		}
 
+		//This should be done by p2p
+		public void PropagateNewMeetingToServers(MeetingData meeting_data)
+		{
+			foreach (IServer server in _servers.Values)
+			{
+				server.AddNewMeting(meeting_data);
+			}
+		}
+
+		public void AddNewMeting(MeetingData meetingData)
+		{
+			_meetings.Add(meetingData._meetingTopic, new Meeting(meetingData));
+
+			Console.WriteLine("Got a new meeting:" + meetingData._meetingTopic);
+
+			UpdateMeetingInvolvedClients(_meetings[meetingData._meetingTopic]);
+		}
 
 		public string CloseMeeting(string client_name, string meeting_topic)
 		{
@@ -338,8 +365,8 @@ namespace Server
 			//book room at selected date
 			selected_room._dates.Add(selected_date, meeting.MeetingTopic);
 
-			//update clients
-			UpdateMeetingInvolvedClients(meeting);
+			//Only update clients with list command
+			//UpdateMeetingInvolvedClients(meeting);
 
 			string client_print_message = "Successfully closed meeting " + meeting_topic + " at room " + meeting.SelectedRoom + " at date " + meeting.SelectedDate + ", with users:";
 			client_print_message += Environment.NewLine;
@@ -350,7 +377,7 @@ namespace Server
 			}
 
 			return client_print_message;
-		}
+		})
 
 		public string CreateMeeting
 			(string owner_name, string meeting_topic, int min_attendees, int number_of_slots, int number_of_invitees, List<string> slots, List<string> invitees)
@@ -419,7 +446,8 @@ namespace Server
 
 			Console.WriteLine(print);
 
-			UpdateMeetingInvolvedClients(meeting);
+			//Only update clients with list command
+			//UpdateMeetingInvolvedClients(meeting);
 
 
 			string client_print_message = "Created a meeting with topic: " + meeting_topic + ", with " + min_attendees + " required atendees, with slots: ";
@@ -439,6 +467,10 @@ namespace Server
 				}
 			}
 
+			//This should be done by p2p
+			PropagateNewMeetingToServers(meeting._meetingData);
+			UpdateMeetingInvolvedClients(meeting);
+
 			return client_print_message;
 		}
 
@@ -446,12 +478,15 @@ namespace Server
 		{
 			DelayMessage();
 
+			_lock.AcquireLock();
+
 			if (_frozen)
 			{
 				_messageBacklog.Add(() => JoinMeeting(client_name, meeting_topic, slot_count, slots));
 
 				return "";
 			}
+
 
 			//if meeting does not exist, user cannot join
 			if (!_meetings.ContainsKey(meeting_topic))
@@ -473,7 +508,39 @@ namespace Server
 				return "Error: user is not invited to this meeting, cannot join";
 			}
 
-			bool joined = false;
+			/*
+			//try to adquire the lock?
+			while (_executingOperation || _executingRemoteOperation)
+			{
+				lock (_executingOperationLock)
+				{
+					_executingOperation = true;
+				}
+			}
+			*/
+
+			DateTime operation_start = DateTime.Now;
+			List<IAsyncResult> results = new List<IAsyncResult>();
+
+			//Start join operations to other servers
+			foreach (IServer server in _servers.Values)
+			{
+				server.JoinOperation(client_name, meeting_topic, slot_count, slots);
+			}
+
+			//execute the join locally
+			JoinOperation(client_name, meeting_topic, slot_count, slots);
+
+			_lock.ReleaseLock();
+
+			return "Joined meeting with topic: " + meeting_topic;
+		}
+
+		public void JoinOperation(string client_name, string meeting_topic, int slot_count, List<string> slots)
+		{
+			DelayMessage();
+
+			Meeting meeting = _meetings[meeting_topic];
 
 			foreach (string slot in slots)
 			{
@@ -481,17 +548,8 @@ namespace Server
 				if (meeting.MeetingRecords.ContainsKey(slot) && !meeting.MeetingRecords[slot].Contains(client_name))
 				{
 					meeting.MeetingRecords[slot].Add(client_name);
-					joined = true;
 				}
 			}
-
-			if (joined)
-			{
-				// only update clients if meeting information was changed
-				UpdateMeetingInvolvedClients(meeting);
-			}
-
-			return "Joined meeting with topic: " + meeting_topic;
 		}
 
 		public void SetRooms(Dictionary<string, Location> locations)
@@ -503,6 +561,35 @@ namespace Server
 		{
 			RemotingServices.Disconnect(this);
 			Environment.Exit(0);
+		}
+
+		public MeetingData GetUpdatedMeeting(string meeting_topic)
+		{
+			return _meetings[meeting_topic]._meetingData;
+		}
+
+		public void UpdateServers(List<string> servers)
+		{
+			servers.Remove(_myURL);
+
+			foreach (string URL in servers)
+			{
+				if (!_servers.ContainsKey(URL) && !_offlineServers.ContainsKey(URL))
+				{
+					//get remote server object
+					IServer server = (IServer)Activator.GetObject(typeof(IServer), URL);
+
+					//weak check
+					if (server == null)
+					{
+						Console.WriteLine("Could not locate server at " + URL);
+						break;
+					}
+
+					Console.WriteLine("Connected to server at " + URL);
+					_servers.Add(URL, server);
+				}
+			}
 		}
 	}
 }

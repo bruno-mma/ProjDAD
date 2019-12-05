@@ -87,6 +87,8 @@ namespace Client
 		public void UpdateMeeting(string meeting_topic, MeetingData meetingData)
 		{
 			//(Distributed version) Aditional logic will needed to determine if this meeting data is actualy more recent than the one already saved
+			Console.WriteLine("Got a new meeting: " + meeting_topic);
+
 			_knownMeetings[meeting_topic] = meetingData;
 		}
 
@@ -103,7 +105,16 @@ namespace Client
 		//TODO: print something different if meeting was canceled
 		public void List()
 		{
+			List<string> meeting_topics = new List<string>(_knownMeetings.Keys);
+
+			//update meeting information before listing
+			foreach (string meeting_topic in meeting_topics)
+			{
+				this._knownMeetings[meeting_topic] = _server.GetUpdatedMeeting(meeting_topic);
+			}
+
 			Console.WriteLine("----------------------------------------LIST----------------------------------------");
+
 
 			foreach (MeetingData meetingData in _knownMeetings.Values)
 			{

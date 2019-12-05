@@ -63,26 +63,17 @@ namespace PuppetMaster
 		//key is server id
 		private Dictionary<string, IServer> _servers = new Dictionary<string, IServer>();
 
+		//key is URL
+		private List<string> _serverURLs = new List<string>();
+
 		//Room locations, key is location name
 		private Dictionary<string, Location> _locations = new Dictionary<string, Location>();
 
 		private readonly string clientURLsPath = @"..\..\..\" + "clientURLs.txt";
-		private readonly string serverURLsPath = @"..\..\..\" + "serverURLs.txt";
 
 		public PuppetMaster()
 		{
 			_PCSs.Add("localhost", new PCS.PCS());
-
-			//check if server or clien URL files exist, if so delete them
-			if (File.Exists(clientURLsPath))
-			{
-				File.Delete(clientURLsPath);
-			}
-
-			if (File.Exists(serverURLsPath))
-			{
-				File.Delete(serverURLsPath);
-			}
 		}
 
 		// Delegates for async PuppetMaster operations
@@ -94,6 +85,15 @@ namespace PuppetMaster
 
 		public delegate string RemoteAsyncStatusDelegate();
 
+		public void NewServerURL(string URL)
+		{
+			_serverURLs.Add(URL);
+
+			foreach (IServer server in _servers.Values)
+			{
+				server.UpdateServers(_serverURLs);
+			}
+		}
 
 		// Async
 		public void StartClient(string name, string user_URL, string server_URL, string script_file)
@@ -116,6 +116,8 @@ namespace PuppetMaster
 			
 			_servers[id] = server;
 			server.SetRooms(_locations);
+
+			NewServerURL(server_URL);
 
 			return "PuppetMaster: Connected to server at " + server_URL;
 		}

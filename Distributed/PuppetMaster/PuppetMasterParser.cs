@@ -58,7 +58,7 @@ namespace PuppetMaster
 					StartClient(arguments);
 					break;
 
-				// Async
+				// NOT Async
 				case "server":
 					StartServer(arguments);
 					break;
@@ -123,8 +123,9 @@ namespace PuppetMaster
 		{
 			if (WrongArgumentCount(arguments, 5)) return;
 
-			//_puppetMaster.StartServer(arguments[1], arguments[2], Int32.Parse(arguments[3]), Int32.Parse(arguments[4]), Int32.Parse(arguments[5]));
+			_puppetMaster.StartServer(arguments[1], arguments[2], Int32.Parse(arguments[3]), Int32.Parse(arguments[4]), Int32.Parse(arguments[5]));
 
+			/*
 			// Create delegate to remote method
 			PuppetMaster.RemoteAsyncStartServerDelegate RemoteDel = new PuppetMaster.RemoteAsyncStartServerDelegate(_puppetMaster.StartServer);
 
@@ -133,6 +134,7 @@ namespace PuppetMaster
 
 			// Call remote method
 			RemoteDel.BeginInvoke(arguments[1], arguments[2], Int32.Parse(arguments[3]), Int32.Parse(arguments[4]), Int32.Parse(arguments[5]), RemoteCallback, null);
+			*/
 		}
 
 		private void AddRoom(List<string> arguments)

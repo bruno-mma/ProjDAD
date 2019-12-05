@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace Interfaces
 {
@@ -14,7 +15,19 @@ namespace Interfaces
 
 		void SetRooms(Dictionary<string, Location> locations);
 
-        void Freeze();
+		void AddNewMeting(MeetingData meetingData);
+
+		MeetingData GetUpdatedMeeting(string meeting_topic);
+
+		void JoinOperation(string client_name, string meeting_topic, int slot_count, List<string> slots);
+
+		void UpdateServers(List<string> serverURLs);
+
+		bool AcquireRemoteLock(DateTime time);
+
+		void ReleaseRemoteLock();
+
+		void Freeze();
 
         void Unfreeze();
 
