@@ -19,7 +19,9 @@ namespace Interfaces
 
 		MeetingData GetUpdatedMeeting(string meeting_topic);
 
-		void JoinOperation(string client_name, string meeting_topic, int slot_count, List<string> slots);
+		void UpdateMeetingData(MeetingData meetingData);
+
+		void UpdateRoom(Room room);
 
 		void UpdateServers(List<string> serverURLs);
 

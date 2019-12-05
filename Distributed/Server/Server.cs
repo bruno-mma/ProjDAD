@@ -61,16 +61,6 @@ namespace Server
 		//keep track of offline servers, value doesnt matter
 		private Dictionary<string, bool> _offlineServers = new Dictionary<string, bool>();
 
-		private readonly string serverURLsPath = @"..\..\..\" + "serverURLs.txt";
-
-		private bool _executingOperation = false;
-		private bool _executingRemoteOperation = false;
-
-		private object _executingOperationLock = new object();
-		private object _executingRemoteOperationLock = new object();
-
-		public delegate void DistributedJoinDelegate(string client_name, string meeting_topic, int slot_count, List<string> slots, DateTime operation_start);
-
 		public DistributedServerLock _lock;
 
 		public Server(string server_id, string my_URL, int max_faults, int min_delay, int max_delay)
@@ -235,7 +225,7 @@ namespace Server
 		{
 			_meetings.Add(meetingData._meetingTopic, new Meeting(meetingData));
 
-			Console.WriteLine("Got a new meeting:" + meetingData._meetingTopic);
+			Console.WriteLine("Got a new meeting: " + meetingData._meetingTopic);
 
 			UpdateMeetingInvolvedClients(_meetings[meetingData._meetingTopic]);
 		}
@@ -243,6 +233,8 @@ namespace Server
 		public string CloseMeeting(string client_name, string meeting_topic)
 		{
 			DelayMessage();
+
+			_lock.AcquireLock();
 
 			if (_frozen)
 			{
@@ -254,6 +246,7 @@ namespace Server
 			//if meeting does not exist, cant close it
 			if (!_meetings.ContainsKey(meeting_topic))
 			{
+				_lock.ReleaseLock();
 				return "Error: Meeting " + meeting_topic + " does not exist";
 			}
 
@@ -262,18 +255,21 @@ namespace Server
 			//if meeting was canceled, cant close it
 			if (meeting.Canceled)
 			{
+				_lock.ReleaseLock();
 				return "Error: Meeting " + meeting_topic + " was canceled, cannot close meeting";
 			}
 
 			//if meeting is already closed, cant close again
 			if (meeting.Closed)
 			{
+				_lock.ReleaseLock();
 				return "Error: Meeting " + meeting_topic + " already closed";
 			}
 
 			//only meeting owner can close a meeting
 			if (meeting.MeetingOwner != client_name)
 			{
+				_lock.ReleaseLock();
 				return "Error: Only meeting owner (" + meeting.MeetingOwner + ") can close meeting " + meeting_topic;
 			}
 
@@ -295,6 +291,7 @@ namespace Server
 
 			if (!minimum_attending)
 			{
+				_lock.ReleaseLock();
 				return "Error: No location has the minimum number of interested users, cannot close meeting";
 			}
 
@@ -332,7 +329,9 @@ namespace Server
 			//if no room is available, cant close the meeting
 			if (available_rooms.Count == 0)
 			{
+				//TODO: Cancel meeting on all servers
 				meeting.Canceled = true;
+				_lock.ReleaseLock();
 				return "Error: no room available at selected dates, canceling meeting";
 			}
 
@@ -352,7 +351,7 @@ namespace Server
 				}
 			}
 
-			//schedule meeting
+			// schedule the meeting
 			meeting.Closed = true;
 			meeting.SelectedDate = selected_date;
 			meeting.SelectedRoom = selected_room._location + ',' + selected_room._name;
@@ -365,8 +364,12 @@ namespace Server
 			//book room at selected date
 			selected_room._dates.Add(selected_date, meeting.MeetingTopic);
 
-			//Only update clients with list command
-			//UpdateMeetingInvolvedClients(meeting);
+			//update other servers on this change
+			foreach (IServer server in _servers.Values)
+			{
+				server.UpdateMeetingData(meeting._meetingData);
+				server.UpdateRoom(selected_room);
+			}
 
 			string client_print_message = "Successfully closed meeting " + meeting_topic + " at room " + meeting.SelectedRoom + " at date " + meeting.SelectedDate + ", with users:";
 			client_print_message += Environment.NewLine;
@@ -376,8 +379,10 @@ namespace Server
 				client_print_message += user + " ";
 			}
 
+			_lock.ReleaseLock();
+
 			return client_print_message;
-		})
+		}
 
 		public string CreateMeeting
 			(string owner_name, string meeting_topic, int min_attendees, int number_of_slots, int number_of_invitees, List<string> slots, List<string> invitees)
@@ -446,9 +451,6 @@ namespace Server
 
 			Console.WriteLine(print);
 
-			//Only update clients with list command
-			//UpdateMeetingInvolvedClients(meeting);
-
 
 			string client_print_message = "Created a meeting with topic: " + meeting_topic + ", with " + min_attendees + " required atendees, with slots: ";
 
@@ -491,6 +493,7 @@ namespace Server
 			//if meeting does not exist, user cannot join
 			if (!_meetings.ContainsKey(meeting_topic))
 			{
+				_lock.ReleaseLock();
 				return "Error: meeting " + meeting_topic + " does not exist, cannot join";
 			}
 
@@ -499,48 +502,18 @@ namespace Server
 			//if meeting is closed, user cannot join
 			if (meeting.Closed)
 			{
+				_lock.ReleaseLock();
 				return "Error: meeting " + meeting_topic + " is closed, cannot join";
 			}
 
 			//if meeting is invitees only, and user is not invited, user cannot join
 			if (meeting.NumberOfInvitees > 0 && !meeting.Invitees.Contains(client_name))
 			{
+				_lock.ReleaseLock();
 				return "Error: user is not invited to this meeting, cannot join";
 			}
 
-			/*
-			//try to adquire the lock?
-			while (_executingOperation || _executingRemoteOperation)
-			{
-				lock (_executingOperationLock)
-				{
-					_executingOperation = true;
-				}
-			}
-			*/
-
-			DateTime operation_start = DateTime.Now;
-			List<IAsyncResult> results = new List<IAsyncResult>();
-
-			//Start join operations to other servers
-			foreach (IServer server in _servers.Values)
-			{
-				server.JoinOperation(client_name, meeting_topic, slot_count, slots);
-			}
-
-			//execute the join locally
-			JoinOperation(client_name, meeting_topic, slot_count, slots);
-
-			_lock.ReleaseLock();
-
-			return "Joined meeting with topic: " + meeting_topic;
-		}
-
-		public void JoinOperation(string client_name, string meeting_topic, int slot_count, List<string> slots)
-		{
-			DelayMessage();
-
-			Meeting meeting = _meetings[meeting_topic];
+			bool joined = false;
 
 			foreach (string slot in slots)
 			{
@@ -548,8 +521,30 @@ namespace Server
 				if (meeting.MeetingRecords.ContainsKey(slot) && !meeting.MeetingRecords[slot].Contains(client_name))
 				{
 					meeting.MeetingRecords[slot].Add(client_name);
+					joined = true;
 				}
 			}
+
+			//update other servers on this change
+			foreach (IServer server in _servers.Values)
+			{
+				server.UpdateMeetingData(meeting._meetingData);
+			}
+
+			string print;
+
+			if (joined)
+			{
+				print = "Joined meeting with topic: " + meeting_topic;
+			}
+			else
+			{
+				print = "Error: No valid slots were given, cannot join";
+			}
+
+			_lock.ReleaseLock();
+
+			return print;
 		}
 
 		public void SetRooms(Dictionary<string, Location> locations)
@@ -590,6 +585,16 @@ namespace Server
 					_servers.Add(URL, server);
 				}
 			}
+		}
+
+		public void UpdateMeetingData(MeetingData meetingData)
+		{
+			_meetings[meetingData._meetingTopic]._meetingData = meetingData;
+		}
+
+		public void UpdateRoom(Room room)
+		{
+			_locations[room._location]._rooms[room._name] = room;
 		}
 	}
 }
