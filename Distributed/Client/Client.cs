@@ -15,16 +15,26 @@ namespace Client
 	{
 		static void Main(string[] args)
 		{
+			string name = args[0];
+			string my_URL = args[1];
+			string server_URL = args[2];
+			string script = args[3];
+
+			int port = URL.GetPort(my_URL);
+			string URI = URL.GetURI(my_URL);
 
 			Client client = new Client();
 			ClientParser parser = new ClientParser(client);
 
-			TcpChannel channel = new TcpChannel(URL.GetPort(args[1]));
+			TcpChannel channel = new TcpChannel(port);
 			ChannelServices.RegisterChannel(channel, false);
 
-			client.Connect(args[0], args[1], args[2]);
-			Console.WriteLine("Executing script: " + args[3] + ".txt");
-			parser.RunScript( new List<string>(){ "run", args[3] } , false);
+			//publish remote client object
+			RemotingServices.Marshal(client, URI, typeof(IClient));
+
+			client.Connect(name, my_URL, server_URL);
+			Console.WriteLine("Executing script: " + script + ".txt");
+			parser.RunScript( new List<string>(){ "run", script } , false);
 			
 
 			while (true)
@@ -68,6 +78,8 @@ namespace Client
 
 			string client_URL = "tcp://" + GetLocalIPAddress() + ":" + URL.GetPort(user_URL) + "/" + URL.GetURI(user_URL);
 
+			Console.WriteLine("Connecting as URL: " + client_URL);
+
 			server.AddClient(client_URL, _name);
 
 			Console.WriteLine("Connected as user " + name + " to server at " + server_URL + " with URL " + client_URL);
@@ -91,7 +103,6 @@ namespace Client
 			Console.WriteLine(_server.JoinMeeting(_name, meeting_topic, number_of_slots, slots));
 		}
 
-		//TODO: print something different if meeting was canceled
 		public void List()
 		{
 			List<string> meeting_topics = new List<string>(_knownMeetings.Keys);

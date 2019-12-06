@@ -144,16 +144,18 @@ namespace PuppetMaster
 				return _PCSs[ip];
 			}
 
-			IPCS pcs = (IPCS)Activator.GetObject(typeof(IPCS), "tcp://" + ip + ":10000/PCS");
+			string PCS_URL = "tcp://" + ip + ":10000/PCS";
+
+			IPCS pcs = (IPCS)Activator.GetObject(typeof(IPCS), PCS_URL);
 
 			//weak check
 			if (pcs == null)
 			{
-				Console.WriteLine("Failed to connect to PCS at " + URL);
+				Console.WriteLine("Failed to connect to PCS at " + PCS_URL);
 				return null;
 			}
 
-			Console.WriteLine("Connected to PCS at " + URL);
+			Console.WriteLine("Connected to PCS at " + PCS_URL);
 
 			_PCSs.Add(ip, pcs);
 
