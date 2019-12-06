@@ -41,7 +41,8 @@ namespace Client
 
 		private Dictionary<string, MeetingData> _knownMeetings = new Dictionary<string, MeetingData>();
 
-        PartialView partialView;
+		private PartialViewS _partialViewS;
+        private PartialViewC _partialViewC;
 
 		public override object InitializeLifetimeService()
 		{
@@ -85,8 +86,9 @@ namespace Client
 
 			AddClientURLToFile(user_URL);
 
-            // Makes himself available to help disseminate meetings information
-            partialView = new PartialView();
+			_partialViewS = new PartialViewS();
+			_partialViewC = new PartialViewC(this, user_URL);
+			Console.WriteLine("I'm now available to help disseminate meetings");
         }
 
 		public void UpdateMeeting(string meeting_topic, MeetingData meetingData)
@@ -97,12 +99,12 @@ namespace Client
 
 		public void CreateMeeting(string meeting_topic, int min_attendees, int number_of_slots, int number_of_invitees, List<string> slots, List<string> invitees)
 		{
-            string meetingInfo = _server.CreateMeeting(_name, meeting_topic, min_attendees, number_of_slots, number_of_invitees, slots, invitees);
+            Console.WriteLine(_server.CreateMeeting(_name, meeting_topic, min_attendees, number_of_slots, number_of_invitees, slots, invitees));
 
-            Console.WriteLine(meetingInfo);
-
-            partialView.DisseminateMessage(meetingInfo);
-        }
+			Console.WriteLine("Sending meeting info to my peers");
+			MeetingData meeting = new MeetingData(meeting_topic, _name, min_attendees, number_of_slots, number_of_invitees, slots, invitees);
+			_partialViewS.DisseminateMeeting(meeting);
+		}
 
 		public void Join(string meeting_topic, int number_of_slots, List<string> slots)
 		{

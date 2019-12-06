@@ -40,9 +40,15 @@ namespace Interfaces
 		void StartClient(string name, string user_URL, string server_URL, string script_file);
 	}
 
-    public interface IPartialView
+    public interface IPartialViewS
     {
-        void SendMessage(string message);
-        void ReceiveMessage();
+		void DisseminateMeeting(MeetingData meeting);
     }
+
+	public interface IPartialViewC
+	{
+		void SendMessage(MeetingData message);
+
+		void ReceiveMessage();
+	}
 }
