@@ -46,7 +46,6 @@ namespace Server
 		private readonly Random _rdn = new Random();
 
 		private bool _frozen = false;
-		private List<Action> _messageBacklog = new List<Action>();
 
 		//key is meeting topic
 		private Dictionary<string, Meeting> _meetings = new Dictionary<string, Meeting>();
@@ -141,23 +140,11 @@ namespace Server
 			_frozen = false;
 
 			Console.WriteLine("This server was unfrozen by the PuppetMaster");
-
-			foreach (Delegate message in _messageBacklog)
-			{
-				message.DynamicInvoke();
-			}
-
-			_messageBacklog = new List<Action>();
 		}
 
 		public bool AddClient(string client_URL, string client_name)
 		{
 			DelayMessage();
-
-			if (_frozen)
-			{
-				_messageBacklog.Add(() => AddClient(client_URL, client_name));
-			}
 
 			Console.WriteLine("Connecting to client at: " + client_URL);
 
@@ -179,23 +166,14 @@ namespace Server
 
 		private void UpdateMeetingInvolvedClients(Meeting meeting)
 		{
-			if (meeting.NumberOfInvitees == 0)
+			foreach (KeyValuePair<string, IClient> kvp in _clients)
 			{
-				foreach (IClient client in _clients.Values)
+				string name = kvp.Key;
+				IClient client = kvp.Value;
+
+				if (meeting.NumberOfInvitees == 0 || meeting.Invitees.Contains(name))
 				{
 					client.UpdateMeeting(meeting.MeetingTopic, meeting._meetingData);
-					//Console.WriteLine("Updated client " + client.Key + " with meeting " + meeting.MeetingTopic);
-				}
-			}
-			else
-			{
-				foreach (string client_name in meeting.Invitees)
-				{
-					if (_clients.ContainsKey(client_name))
-					{
-						_clients[client_name].UpdateMeeting(meeting.MeetingTopic, meeting._meetingData);
-						//Console.WriteLine("Updated client " + client_name + " with meeting " + meeting.MeetingTopic);
-					}
 				}
 			}
 		}
@@ -207,17 +185,30 @@ namespace Server
 				if (meeting.NumberOfInvitees == 0 || meeting.Invitees.Contains(client_name))
 				{
 					_clients[client_name].UpdateMeeting(meeting.MeetingTopic, meeting._meetingData);
-					//Console.WriteLine("Updated client " + client_name + " with meeting " + meeting.MeetingTopic);
 				}
 			}
 		}
 
-		//This should be done by p2p
+
 		public void PropagateNewMeetingToServers(MeetingData meeting_data)
 		{
-			foreach (IServer server in _servers.Values)
+			List<IServer> servers = new List<IServer>(_servers.Values);
+			List<string> URLs = new List<string>(_servers.Keys);
+
+			for (int i = 0; i < servers.Count; i++)
 			{
-				server.AddNewMeting(meeting_data);
+				IServer server = servers[i];
+
+				try
+				{
+					server.AddNewMeting(meeting_data);
+				}
+
+				catch (System.Net.Sockets.SocketException)
+				{
+					//server is down, remove it
+					ServerDown(URLs[i]);
+				}
 			}
 		}
 
@@ -235,13 +226,6 @@ namespace Server
 			DelayMessage();
 
 			_lock.AcquireLock();
-
-			if (_frozen)
-			{
-				_messageBacklog.Add(() => CloseMeeting(client_name, meeting_topic));
-
-				return "";
-			}
 
 			//if meeting does not exist, cant close it
 			if (!_meetings.ContainsKey(meeting_topic))
@@ -392,17 +376,12 @@ namespace Server
 			(string owner_name, string meeting_topic, int min_attendees, int number_of_slots, int number_of_invitees, List<string> slots, List<string> invitees)
 		{
 			DelayMessage();
-
-			if (_frozen)
-			{
-				_messageBacklog.Add(() => CreateMeeting(owner_name, meeting_topic, min_attendees, number_of_slots, number_of_invitees, slots, invitees));
-
-				return "";
-			}
+			_lock.AcquireLock();
 
 			//meeting topic has to be unique
 			if (_meetings.ContainsKey(meeting_topic))
 			{
+				_lock.ReleaseLock();
 				return "Error: meeting with topic " + meeting_topic + " already exists, cannot create meeting";
 			}
 
@@ -427,6 +406,7 @@ namespace Server
 			//if no valid spot was given, meeting cant be created
 			if (!valid_spot)
 			{
+				_lock.ReleaseLock();
 				return "Error: no valid location was given, cannot create meeting";
 			}
 
@@ -477,6 +457,8 @@ namespace Server
 			PropagateNewMeetingToServers(meeting._meetingData);
 			UpdateMeetingInvolvedClients(meeting);
 
+			_lock.ReleaseLock();
+
 			return client_print_message;
 		}
 
@@ -485,14 +467,6 @@ namespace Server
 			DelayMessage();
 
 			_lock.AcquireLock();
-
-			if (_frozen)
-			{
-				_messageBacklog.Add(() => JoinMeeting(client_name, meeting_topic, slot_count, slots));
-
-				return "";
-			}
-
 
 			//if meeting does not exist, user cannot join
 			if (!_meetings.ContainsKey(meeting_topic))
@@ -603,6 +577,15 @@ namespace Server
 			_locations[room._location]._rooms[room._name] = room;
 		}
 
+		private void ServerDown(string URL)
+		{
+			//this server is down, remove it
+			_servers.Remove(URL);
+			_offlineServers.Add(URL);
+
+			Console.WriteLine("Server at " + URL + " is down");
+		}
+
 		public void UpdateMeetingDataAllServers(MeetingData meetingData)
 		{
 			List<IServer> servers = new List<IServer>(_servers.Values);
@@ -617,17 +600,8 @@ namespace Server
 
 				catch (System.Net.Sockets.SocketException)
 				{
-					string URL = URLs[i];
-
 					//this server is down, remove it
-					_servers.Remove(URL);
-					_offlineServers.Add(URL);
-
-					Console.WriteLine("Server at " + URL + " is down");
-
-					//and try again
-					UpdateMeetingDataAllServers(meetingData);
-					return;
+					ServerDown(URLs[i]);
 				}
 			}
 		}

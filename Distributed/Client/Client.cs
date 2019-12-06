@@ -56,7 +56,7 @@ namespace Client
 		private Dictionary<string, MeetingData> _knownMeetings = new Dictionary<string, MeetingData>();
 
 		//URLs of known servers
-		public HashSet<string> _knownServers = new HashSet<string>();
+		public List<string> _knownServers = new List<string>();
 
 		//keep track of offline servers
 		public HashSet<string> _offlineServers = new HashSet<string>();
@@ -72,7 +72,7 @@ namespace Client
 			_MyURL = URL;
 		}
 
-		public void Connect(string server_URL)
+		public bool Connect(string server_URL)
 		{
 			//get remote server object
 			IServer server = (IServer)Activator.GetObject(typeof(IServer), server_URL);
@@ -81,7 +81,7 @@ namespace Client
 			if (server == null)
 			{
 				Console.WriteLine("Could not locate server at " + server_URL);
-				return;
+				return false;
 			}
 
 			_server = server;
@@ -92,40 +92,89 @@ namespace Client
 
 			string client_URL = "tcp://" + GetLocalIPAddress() + ":" + URL.GetPort(_MyURL) + "/" + URL.GetURI(_MyURL);
 
-			Console.WriteLine("Connecting as URL: " + client_URL);
-
 			server.AddClient(client_URL, _name);
 
-			Console.WriteLine("Connected as user " + _name + " to server at " + server_URL);
+			Console.WriteLine("Connected to server " + server_URL + " as user " + _name);
+			return true;
 		}
 
 		public void UpdateMeeting(string meeting_topic, MeetingData meetingData)
 		{
-			//(Distributed version) Aditional logic will needed to determine if this meeting data is actualy more recent than the one already saved
-			Console.WriteLine("Got a new meeting: " + meeting_topic);
+			Console.WriteLine("Got word of a new meeting: " + meeting_topic);
 
 			_knownMeetings[meeting_topic] = meetingData;
 		}
 
 		public void CreateMeeting(string meeting_topic, int min_attendees, int number_of_slots, int number_of_invitees, List<string> slots, List<string> invitees)
 		{
-			Console.WriteLine(_server.CreateMeeting(_name, meeting_topic, min_attendees, number_of_slots, number_of_invitees, slots, invitees));
+			string result = "";
+			bool complete = false;
+
+			while (!complete)
+			{
+				try
+				{
+					result = _server.CreateMeeting(_name, meeting_topic, min_attendees, number_of_slots, number_of_invitees, slots, invitees);
+					complete = true;
+				}
+				catch (System.Net.Sockets.SocketException)
+				{
+					//server is down
+					ReconnectToService();
+				}
+			}
+
+			Console.WriteLine(result);
 		}
 
 		public void Join(string meeting_topic, int number_of_slots, List<string> slots)
 		{
-			Console.WriteLine(_server.JoinMeeting(_name, meeting_topic, number_of_slots, slots));
+			string result = "";
+			bool complete = false;
+
+			while (!complete)
+			{
+				try
+				{
+					result = _server.JoinMeeting(_name, meeting_topic, number_of_slots, slots);
+					complete = true;
+				}
+				catch (System.Net.Sockets.SocketException)
+				{
+					//server is down
+					ReconnectToService();
+				}
+			}
+
+			Console.WriteLine(result);
+		}
+
+		private void UpdateMeetings()
+		{
+			List<string> meeting_topics = new List<string>(_knownMeetings.Keys);
+
+			
+			foreach (string meeting_topic in meeting_topics)
+			{
+				try
+				{
+					_knownMeetings[meeting_topic] = _server.GetUpdatedMeeting(meeting_topic);
+				}
+				catch (System.Net.Sockets.SocketException)
+				{
+					//server is down
+					ReconnectToService();
+
+					//try again
+					UpdateMeetings();
+				}
+			}
 		}
 
 		public void List()
 		{
-			List<string> meeting_topics = new List<string>(_knownMeetings.Keys);
-
 			//update meeting information before listing
-			foreach (string meeting_topic in meeting_topics)
-			{
-				this._knownMeetings[meeting_topic] = _server.GetUpdatedMeeting(meeting_topic);
-			}
+			UpdateMeetings();
 
 			Console.WriteLine("----------------------------------------LIST----------------------------------------");
 
@@ -193,7 +242,24 @@ namespace Client
 
 		public void CloseMeeting(string meeting_topic)
 		{
-			Console.WriteLine(_server.CloseMeeting(_name, meeting_topic));
+			string result = "";
+			bool complete = false;
+
+			while(!complete)
+			{
+				try
+				{
+					result = _server.CloseMeeting(_name, meeting_topic);
+					complete = true;
+				}
+				catch (System.Net.Sockets.SocketException)
+				{
+					//server is down
+					ReconnectToService();
+				}
+			}
+
+			Console.WriteLine(result);
 		}
 
 		public static string GetLocalIPAddress()
@@ -220,6 +286,26 @@ namespace Client
 					Console.WriteLine("Got word of a new server at " + URL);
 					_knownServers.Add(URL);
 				}
+			}
+		}
+
+		private void ReconnectToService()
+		{
+			_offlineServers.Add(_serverURL);
+
+			if (_knownServers.Count == 0)
+			{
+				Console.WriteLine("No more servers online, exiting");
+				Thread.Sleep(3000);
+				Environment.Exit(0);
+			}
+
+			bool connected = false;
+
+			while (!connected)
+			{
+				connected = Connect(_knownServers[0]);
+				_knownServers.RemoveAt(0);
 			}
 		}
 	}
