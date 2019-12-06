@@ -1,5 +1,0 @@
-AddRoom meme 10 room1
-Server s1 tcp://194.210.180.6:3001/server1 0 0 0
-Server s2 tcp://194.210.180.6:3002/server2 0 0 0
-Client c1 tcp://localhost:4000/client0 tcp://194.210.180.6:3001/server1 empty
-Client c2 tcp://localhost:4001/client1 tcp://194.210.180.6:3002/server2 empty

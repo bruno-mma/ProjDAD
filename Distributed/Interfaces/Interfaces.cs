@@ -41,6 +41,8 @@ namespace Interfaces
 	public interface IClient
 	{
 		void UpdateMeeting(string meeting_topic, MeetingData meetingData);
+
+		void UpdateKnownServers(List<string> server_URLs);
 	}
 
 	public interface IMeeting

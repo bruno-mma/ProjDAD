@@ -23,7 +23,7 @@ namespace Client
 			int port = URL.GetPort(my_URL);
 			string URI = URL.GetURI(my_URL);
 
-			Client client = new Client();
+			Client client = new Client(name, my_URL);
 			ClientParser parser = new ClientParser(client);
 
 			TcpChannel channel = new TcpChannel(port);
@@ -32,7 +32,7 @@ namespace Client
 			//publish remote client object
 			RemotingServices.Marshal(client, URI, typeof(IClient));
 
-			client.Connect(name, my_URL, server_URL);
+			client.Connect(server_URL);
 			Console.WriteLine("Executing script: " + script + ".txt");
 			parser.RunScript( new List<string>(){ "run", script } , false);
 			
@@ -48,19 +48,32 @@ namespace Client
 	public class Client : MarshalByRefObject, IClient
 	{
 		private string _name;
+		private string _MyURL;
+
 		private IServer _server;
+		private string _serverURL;
 
 		private Dictionary<string, MeetingData> _knownMeetings = new Dictionary<string, MeetingData>();
+
+		//URLs of known servers
+		public HashSet<string> _knownServers = new HashSet<string>();
+
+		//keep track of offline servers
+		public HashSet<string> _offlineServers = new HashSet<string>();
 
 		public override object InitializeLifetimeService()
 		{
 			return null;
 		}
 
-		public void Connect(string name, string user_URL, string server_URL)
+		public Client(string name, string URL)
 		{
-			this._name = name;
+			_name = name;
+			_MyURL = URL;
+		}
 
+		public void Connect(string server_URL)
+		{
 			//get remote server object
 			IServer server = (IServer)Activator.GetObject(typeof(IServer), server_URL);
 
@@ -72,17 +85,18 @@ namespace Client
 			}
 
 			_server = server;
+			_serverURL = server_URL;
 
 			//publish remote client object
-			RemotingServices.Marshal(this, URL.GetURI(user_URL), typeof(IClient));
+			RemotingServices.Marshal(this, URL.GetURI(_MyURL), typeof(IClient));
 
-			string client_URL = "tcp://" + GetLocalIPAddress() + ":" + URL.GetPort(user_URL) + "/" + URL.GetURI(user_URL);
+			string client_URL = "tcp://" + GetLocalIPAddress() + ":" + URL.GetPort(_MyURL) + "/" + URL.GetURI(_MyURL);
 
 			Console.WriteLine("Connecting as URL: " + client_URL);
 
 			server.AddClient(client_URL, _name);
 
-			Console.WriteLine("Connected as user " + name + " to server at " + server_URL + " with URL " + client_URL);
+			Console.WriteLine("Connected as user " + _name + " to server at " + server_URL);
 		}
 
 		public void UpdateMeeting(string meeting_topic, MeetingData meetingData)
@@ -193,6 +207,20 @@ namespace Client
 				}
 			}
 			throw new Exception("No network adapters with an IPv4 address in the system!");
+		}
+
+		public void UpdateKnownServers(List<string> server_URLs)
+		{
+			server_URLs.Remove(_serverURL);
+
+			foreach (string URL in server_URLs)
+			{
+				if (!_knownServers.Contains(URL) && !_offlineServers.Contains(URL))
+				{
+					Console.WriteLine("Got word of a new server at " + URL);
+					_knownServers.Add(URL);
+				}
+			}
 		}
 	}
 }

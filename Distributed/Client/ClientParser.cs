@@ -38,10 +38,6 @@ namespace Client
 					Environment.Exit(0);
 					break;
 
-				case "connect":
-					Connect(arguments);
-					break;
-
 				case "create":
 					Create(arguments);
 					break;
@@ -91,14 +87,6 @@ namespace Client
 			}
 
 			return false;
-		}
-
-
-		private void Connect(List<string> arguments)
-		{
-			if (WrongArgumentCount(arguments, 3)) return;
-
-			_client.Connect(arguments[1], arguments[2], arguments[3]);
 		}
 
 		private void Create(List<string> arguments)

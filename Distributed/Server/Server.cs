@@ -30,12 +30,6 @@ namespace Server
 			Console.WriteLine("Server running at " + args[1]);
 
 			Console.ReadLine();
-
-			while(true)
-			{
-				server.TestLock();
-				Thread.Sleep(1000);
-			}
 		}
 	}
 
@@ -66,7 +60,7 @@ namespace Server
 		//key is server URL, if connection is lost then add record to offlineServers
 		public Dictionary<string, IServer> _servers = new Dictionary<string, IServer>();
 
-		//keep track of offline servers, value doesnt matter
+		//keep track of offline servers
 		public HashSet<string> _offlineServers = new HashSet<string>();
 
 		public DistributedServerLock _lock;
@@ -176,13 +170,9 @@ namespace Server
 				return false;
 			}
 
-			else
-			{
-				Console.WriteLine("Adding client at: " + client_URL);
-				_clients[client_name] = client;
-
-				//UpdateClientAllMeetings(client_name);
-			}
+			Console.WriteLine("Adding client at: " + client_URL);
+			_clients[client_name] = client;
+			client.UpdateKnownServers(new List<string>(_servers.Keys));
 
 			return true;
 		}
@@ -594,6 +584,12 @@ namespace Server
 					Console.WriteLine("Connected to server at " + URL);
 					_servers.Add(URL, server);
 				}
+			}
+
+			//update clients known servers
+			foreach (IClient client in _clients.Values)
+			{
+				client.UpdateKnownServers(servers);
 			}
 		}
 
