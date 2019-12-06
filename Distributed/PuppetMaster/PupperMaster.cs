@@ -133,25 +133,25 @@ namespace PuppetMaster
 			_locations[location]._rooms.Add(name, new Room(location, name, capacity));
 		}
 
-		private IPCS GetPCS(string pcs_URL)
+		private IPCS GetPCS(string URL)
 		{
-			string ip = URL.GetIP(pcs_URL);
+			string ip = Interfaces.URL.GetIP(URL);
 
 			if (_PCSs.ContainsKey(ip))
 			{
 				return _PCSs[ip];
 			}
 
-			IPCS pcs = (IPCS)Activator.GetObject(typeof(IPCS), pcs_URL);
+			IPCS pcs = (IPCS)Activator.GetObject(typeof(IPCS), "tcp://" + ip + ":10000/PCS");
 
 			//weak check
 			if (pcs == null)
 			{
-				Console.WriteLine("Failed to connect to PCS at " + pcs_URL);
+				Console.WriteLine("Failed to connect to PCS at " + URL);
 				return null;
 			}
 
-			Console.WriteLine("Connected to PCS at " + pcs_URL);
+			Console.WriteLine("Connected to PCS at " + URL);
 
 			_PCSs.Add(ip, pcs);
 
