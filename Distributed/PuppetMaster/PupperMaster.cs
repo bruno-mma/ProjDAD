@@ -69,8 +69,6 @@ namespace PuppetMaster
 		//Room locations, key is location name
 		private Dictionary<string, Location> _locations = new Dictionary<string, Location>();
 
-		private readonly string clientURLsPath = @"..\..\..\" + "clientURLs.txt";
-
 		public PuppetMaster()
 		{
 			_PCSs.Add("localhost", new PCS.PCS());
@@ -89,16 +87,20 @@ namespace PuppetMaster
 		{
 			_serverURLs.Add(URL);
 
-			foreach (IServer server in _servers.Values)
+
+			if (_servers.Count != 1)
 			{
-				server.UpdateServers(_serverURLs);
+				foreach (IServer server in _servers.Values)
+				{
+					server.UpdateServers(_serverURLs);
+				}
 			}
 		}
 
 		// Async
 		public void StartClient(string name, string user_URL, string server_URL, string script_file)
 		{
-			GetPCS(server_URL).StartClient(name, user_URL, server_URL, script_file);
+			GetPCS(user_URL).StartClient(name, user_URL, server_URL, script_file);
 		}
 
 		// Async

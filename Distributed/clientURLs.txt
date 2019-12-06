@@ -41,3 +41,8 @@ tcp://localhost:4001/client1
 tcp://localhost:4000/client0
 tcp://localhost:4001/client1
 tcp://localhost:4000/client0
+tcp://localhost:4001/client1
+tcp://localhost:4000/client0
+tcp://localhost:4001/client1
+tcp://localhost:4000/client0
+tcp://localhost:4001/client1

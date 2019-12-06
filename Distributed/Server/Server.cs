@@ -25,6 +25,8 @@ namespace Server
 
 			RemotingServices.Marshal(server, URI, typeof(IServer));
 
+			RemotingConfiguration.CustomErrorsEnabled(false);
+
 			Console.WriteLine("Server running at " + args[1]);
 
 			Console.ReadLine();
@@ -163,6 +165,8 @@ namespace Server
 				_messageBacklog.Add(() => AddClient(client_URL, client_name));
 			}
 
+			Console.WriteLine("Connecting to client at: " + client_URL);
+
 			IClient client = (IClient)Activator.GetObject(typeof(IClient), client_URL);
 
 			//weak check
@@ -187,9 +191,9 @@ namespace Server
 		{
 			if (meeting.NumberOfInvitees == 0)
 			{
-				foreach (var client in _clients)
+				foreach (IClient client in _clients.Values)
 				{
-					client.Value.UpdateMeeting(meeting.MeetingTopic, meeting._meetingData);
+					client.UpdateMeeting(meeting.MeetingTopic, meeting._meetingData);
 					//Console.WriteLine("Updated client " + client.Key + " with meeting " + meeting.MeetingTopic);
 				}
 			}

@@ -2,6 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net;
+using System.Net.Sockets;
 using System.Runtime.Remoting;
 using System.Runtime.Remoting.Channels;
 using System.Runtime.Remoting.Channels.Tcp;
@@ -13,16 +15,17 @@ namespace Client
 	{
 		static void Main(string[] args)
 		{
+
 			Client client = new Client();
 			ClientParser parser = new ClientParser(client);
 
-			//if started by PuppetMaster
-			if (args.Length != 0)
-			{
-				client.Connect(args[0], args[1], args[2]);
-				Console.WriteLine("Executing script: " + args[3] + ".txt");
-				parser.RunScript( new List<string>(){ "run", args[3] } , false);
-			}
+			TcpChannel channel = new TcpChannel(URL.GetPort(args[1]));
+			ChannelServices.RegisterChannel(channel, false);
+
+			client.Connect(args[0], args[1], args[2]);
+			Console.WriteLine("Executing script: " + args[3] + ".txt");
+			parser.RunScript( new List<string>(){ "run", args[3] } , false);
+			
 
 			while (true)
 			{
@@ -34,8 +37,6 @@ namespace Client
 
 	public class Client : MarshalByRefObject, IClient
 	{
-		private readonly string clientURLsPath = @"..\..\..\" + "clientURLs.txt";
-
 		private string _name;
 		private IServer _server;
 
@@ -46,21 +47,9 @@ namespace Client
 			return null;
 		}
 
-		private void AddClientURLToFile(string client_URL)
-		{
-			using (StreamWriter sw = File.AppendText(clientURLsPath))
-			{
-				sw.WriteLine(client_URL);
-			}
-		}
-
-
 		public void Connect(string name, string user_URL, string server_URL)
 		{
 			this._name = name;
-
-			TcpChannel channel = new TcpChannel(URL.GetPort(user_URL));
-			ChannelServices.RegisterChannel(channel, false);
 
 			//get remote server object
 			IServer server = (IServer)Activator.GetObject(typeof(IServer), server_URL);
@@ -77,11 +66,11 @@ namespace Client
 			//publish remote client object
 			RemotingServices.Marshal(this, URL.GetURI(user_URL), typeof(IClient));
 
-			server.AddClient(user_URL, _name);
+			string client_URL = "tcp://" + GetLocalIPAddress() + ":" + URL.GetPort(user_URL) + "/" + URL.GetURI(user_URL);
 
-			Console.WriteLine("Connected as user " + name + " to server at " + server_URL);
+			server.AddClient(client_URL, _name);
 
-			AddClientURLToFile(user_URL);
+			Console.WriteLine("Connected as user " + name + " to server at " + server_URL + " with URL " + client_URL);
 		}
 
 		public void UpdateMeeting(string meeting_topic, MeetingData meetingData)
@@ -180,6 +169,19 @@ namespace Client
 		public void CloseMeeting(string meeting_topic)
 		{
 			Console.WriteLine(_server.CloseMeeting(_name, meeting_topic));
+		}
+
+		public static string GetLocalIPAddress()
+		{
+			var host = Dns.GetHostEntry(Dns.GetHostName());
+			foreach (var ip in host.AddressList)
+			{
+				if (ip.AddressFamily == AddressFamily.InterNetwork)
+				{
+					return ip.ToString();
+				}
+			}
+			throw new Exception("No network adapters with an IPv4 address in the system!");
 		}
 	}
 }
