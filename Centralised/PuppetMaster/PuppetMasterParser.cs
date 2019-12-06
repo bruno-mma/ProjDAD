@@ -123,6 +123,14 @@ namespace PuppetMaster
 		{
 			if (WrongArgumentCount(arguments, 5)) return;
 
+			if (arguments[1] == "s2")
+			{
+				Thread.Sleep(5000);
+				Console.WriteLine("s2 sleeping");
+			}
+				
+
+
 			//_puppetMaster.StartServer(arguments[1], arguments[2], Int32.Parse(arguments[3]), Int32.Parse(arguments[4]), Int32.Parse(arguments[5]));
 
 			// Create delegate to remote method

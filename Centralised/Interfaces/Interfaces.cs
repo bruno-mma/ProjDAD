@@ -21,6 +21,10 @@ namespace Interfaces
 		bool IsFrozen();
 
         void Crash();
+
+		void AddServer(string serverId, string serverURL);
+
+		string ReplicateJoin(string joinId, string client_name, string meeting_topic, int slot_count, List<string> slots);
 	}
 
 	public interface IClient
@@ -36,8 +40,8 @@ namespace Interfaces
 	public interface IPCS
 	{
 		bool LifeCheck();
-		void StartServer(string server_id, string URL, int max_faults, int min_delay, int max_delay);
-
+		void StartServer(string server_id, string URL, int max_faults, int min_delay, int max_delay, string allServersURL);
+		void StartServer(string server_id, string URL, int max_faults, int min_delay, int max_delay);		
 		void StartClient(string name, string user_URL, string server_URL, string script_file);
 	}
 }

@@ -42,6 +42,12 @@ namespace PCS
 			Process.Start(path, name + " " + user_URL + " " + server_URL + " " + script_file);
 		}
 
+		public void StartServer(string server_id, string server_URL, int max_faults, int min_delay, int max_delay, string allServersURL)
+		{
+			string path = @"..\..\..\" + @"\Server\bin\Debug\Server.exe";
+			Console.WriteLine("PCS: Starting server at " + server_URL);
+			Process.Start(path, server_id + " " + server_URL + " " + max_faults + " " + min_delay + " " + max_delay + " " + allServersURL);
+		}
 		public void StartServer(string server_id, string server_URL, int max_faults, int min_delay, int max_delay)
 		{
 			string path = @"..\..\..\" + @"\Server\bin\Debug\Server.exe";

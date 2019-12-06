@@ -6,6 +6,9 @@ using System.Runtime.Remoting.Channels.Tcp;
 using System.Runtime.Remoting.Channels;
 using System.Runtime.Remoting.Messaging;
 using System.Diagnostics;
+using System.Threading;
+using System.Net;
+using System.Net.Sockets;
 
 namespace PuppetMaster
 {
@@ -21,7 +24,6 @@ namespace PuppetMaster
 
 			TcpChannel channel = new TcpChannel(puppetMaster._port);
 			ChannelServices.RegisterChannel(channel, false);
-		
 
 			try
 			{
@@ -57,6 +59,8 @@ namespace PuppetMaster
 
 	public class PuppetMaster : MarshalByRefObject
 	{
+		private static Mutex mut = new Mutex();
+
 
 		public readonly int _port = 10001;
 
@@ -65,6 +69,9 @@ namespace PuppetMaster
 
 		//key is server id
 		private Dictionary<string, IServer> _servers = new Dictionary<string, IServer>();
+
+		//used to pass existing servers, as argument, to new  servers
+		private static string _allServersURL ="";
 
 		//Room locations, key is location name
 		private Dictionary<string, Location> _locations = new Dictionary<string, Location>();
@@ -109,7 +116,19 @@ namespace PuppetMaster
 		// Async
 		public string StartServer(string id, string server_URL, int max_faults, int min_delay, int max_delay)
 		{
-			GetPCS(server_URL).StartServer(id, server_URL, max_faults, min_delay, max_delay);
+			mut.WaitOne();
+			Console.WriteLine("start mutex");
+			Console.WriteLine("_allServersURL: "+_allServersURL);
+			Console.WriteLine("Server ID: "+ id);
+
+			if (_allServersURL.Length > 0)
+			{
+				GetPCS(server_URL).StartServer(id, server_URL, max_faults, min_delay, max_delay, _allServersURL);
+			}
+			else
+			{
+				GetPCS(server_URL).StartServer(id, server_URL, max_faults, min_delay, max_delay);
+			}
 
 			IServer server = (IServer)Activator.GetObject(typeof(IServer), server_URL);
 
@@ -122,6 +141,12 @@ namespace PuppetMaster
 			_servers[id] = server;
 			server.SetRooms(_locations);
 
+			_allServersURL += id;
+			_allServersURL += ",";
+			_allServersURL += server_URL;
+			_allServersURL += ";";
+			Console.WriteLine("end mutex");
+			mut.ReleaseMutex();
 			return "PuppetMaster: Connected to server at " + server_URL;
 		}
 
@@ -238,5 +263,6 @@ namespace PuppetMaster
 			//ignoring the exception raised from closing the connection abruptly
 			catch (System.Net.Sockets.SocketException) { }
 		}
+
 	}
 }
