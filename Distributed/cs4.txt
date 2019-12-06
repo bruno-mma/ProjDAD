@@ -1,0 +1,2 @@
+wait 1000
+join asd 1 meme,1

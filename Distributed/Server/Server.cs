@@ -184,7 +184,7 @@ namespace Server
 				foreach (var client in _clients)
 				{
 					client.Value.UpdateMeeting(meeting.MeetingTopic, meeting._meetingData);
-					Console.WriteLine("Updated client " + client.Key + " with meeting " + meeting.MeetingTopic);
+					//Console.WriteLine("Updated client " + client.Key + " with meeting " + meeting.MeetingTopic);
 				}
 			}
 			else
@@ -194,7 +194,7 @@ namespace Server
 					if (_clients.ContainsKey(client_name))
 					{
 						_clients[client_name].UpdateMeeting(meeting.MeetingTopic, meeting._meetingData);
-						Console.WriteLine("Updated client " + client_name + " with meeting " + meeting.MeetingTopic);
+						//Console.WriteLine("Updated client " + client_name + " with meeting " + meeting.MeetingTopic);
 					}
 				}
 			}
@@ -331,7 +331,14 @@ namespace Server
 			{
 				//TODO: Cancel meeting on all servers
 				meeting.Canceled = true;
-				_lock.ReleaseLock();
+
+				//update other servers on this change
+				foreach (IServer server in _servers.Values)
+				{
+					server.UpdateMeetingData(meeting._meetingData);
+					_lock.ReleaseLock();
+				}
+
 				return "Error: no room available at selected dates, canceling meeting";
 			}
 

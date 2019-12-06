@@ -155,7 +155,12 @@ namespace Client
 				}
 				Console.Write(slots);
 
-				if (meetingData._closed)
+				if (meetingData._canceled)
+				{
+					Console.WriteLine("======CANCELED======");
+				}
+
+				else if (meetingData._closed)
 				{
 					Console.WriteLine("======CLOSED======");
 					Console.WriteLine("Scheduled at " + meetingData._selectedDate + " room " + meetingData._selectedRoom + " selected to attend:");
