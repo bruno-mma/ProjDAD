@@ -25,7 +25,7 @@ namespace Interfaces
 
 		void UpdateServers(List<string> serverURLs);
 
-		bool AcquireRemoteLock(DateTime time);
+		bool AcquireRemoteLock();
 
 		void ReleaseRemoteLock();
 

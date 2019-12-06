@@ -28,6 +28,12 @@ namespace Server
 			Console.WriteLine("Server running at " + args[1]);
 
 			Console.ReadLine();
+
+			while(true)
+			{
+				server.TestLock();
+				Thread.Sleep(1000);
+			}
 		}
 	}
 
@@ -59,7 +65,7 @@ namespace Server
 		public Dictionary<string, IServer> _servers = new Dictionary<string, IServer>();
 
 		//keep track of offline servers, value doesnt matter
-		private Dictionary<string, bool> _offlineServers = new Dictionary<string, bool>();
+		public HashSet<string> _offlineServers = new HashSet<string>();
 
 		public DistributedServerLock _lock;
 
@@ -72,7 +78,7 @@ namespace Server
 			_minDelay = min_delay;
 			_maxDelay = max_delay;
 
-			_lock = new DistributedServerLock(this, _servers);
+			_lock = new DistributedServerLock(this, _servers, _offlineServers);
 		}
 
 		public void TestLock()
@@ -89,7 +95,7 @@ namespace Server
 		}
 
 		//used by remote servers to try and adquire the lock
-		public bool AcquireRemoteLock(DateTime time)
+		public bool AcquireRemoteLock()
 		{
 			DelayMessage();
 
@@ -329,16 +335,12 @@ namespace Server
 			//if no room is available, cant close the meeting
 			if (available_rooms.Count == 0)
 			{
-				//TODO: Cancel meeting on all servers
 				meeting.Canceled = true;
 
 				//update other servers on this change
-				foreach (IServer server in _servers.Values)
-				{
-					server.UpdateMeetingData(meeting._meetingData);
-					_lock.ReleaseLock();
-				}
+				UpdateMeetingDataAllServers(meeting._meetingData);
 
+				_lock.ReleaseLock();
 				return "Error: no room available at selected dates, canceling meeting";
 			}
 
@@ -372,9 +374,10 @@ namespace Server
 			selected_room._dates.Add(selected_date, meeting.MeetingTopic);
 
 			//update other servers on this change
+			UpdateMeetingDataAllServers(meeting._meetingData);
+
 			foreach (IServer server in _servers.Values)
 			{
-				server.UpdateMeetingData(meeting._meetingData);
 				server.UpdateRoom(selected_room);
 			}
 
@@ -532,17 +535,13 @@ namespace Server
 				}
 			}
 
-			//update other servers on this change
-			foreach (IServer server in _servers.Values)
-			{
-				server.UpdateMeetingData(meeting._meetingData);
-			}
-
 			string print;
 
 			if (joined)
 			{
 				print = "Joined meeting with topic: " + meeting_topic;
+				//update other servers on this change
+				UpdateMeetingDataAllServers(meeting._meetingData);
 			}
 			else
 			{
@@ -576,7 +575,7 @@ namespace Server
 
 			foreach (string URL in servers)
 			{
-				if (!_servers.ContainsKey(URL) && !_offlineServers.ContainsKey(URL))
+				if (!_servers.ContainsKey(URL) && !_offlineServers.Contains(URL))
 				{
 					//get remote server object
 					IServer server = (IServer)Activator.GetObject(typeof(IServer), URL);
@@ -602,6 +601,35 @@ namespace Server
 		public void UpdateRoom(Room room)
 		{
 			_locations[room._location]._rooms[room._name] = room;
+		}
+
+		public void UpdateMeetingDataAllServers(MeetingData meetingData)
+		{
+			List<IServer> servers = new List<IServer>(_servers.Values);
+			List<string> URLs = new List<string>(_servers.Keys);
+
+			for (int i = 0; i < servers.Count; i++)
+			{
+				try
+				{
+					servers[i].UpdateMeetingData(meetingData);
+				}
+
+				catch (System.Net.Sockets.SocketException)
+				{
+					string URL = URLs[i];
+
+					//this server is down, remove it
+					_servers.Remove(URL);
+					_offlineServers.Add(URL);
+
+					Console.WriteLine("Server at " + URL + " is down");
+
+					//and try again
+					UpdateMeetingDataAllServers(meetingData);
+					return;
+				}
+			}
 		}
 	}
 }

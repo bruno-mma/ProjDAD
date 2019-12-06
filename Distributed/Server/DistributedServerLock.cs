@@ -14,6 +14,7 @@ namespace Server
 		//server where this instance of the lock is
 		private IServer _server;
 		public Dictionary<string, IServer> _servers;
+		public HashSet<string> _offlineServers;
 
 		private readonly Random _rdn = new Random();
 
@@ -21,14 +22,15 @@ namespace Server
 		public bool _locked = false;
 
 
-		public DistributedServerLock(IServer server, Dictionary<string, IServer> servers)
+		public DistributedServerLock(IServer server, Dictionary<string, IServer> servers, HashSet<string> offlineServers)
 		{
 			_server = server;
 			_servers = servers;
+			_offlineServers = offlineServers;
 		}
 
 
-		public bool TryAcquireLock(DateTime operation_start)
+		public bool TryAcquireLock()
 		{
 			//adquire the lock locally
 			lock (this)
@@ -38,53 +40,88 @@ namespace Server
 					return false;
 				}
 
+				List<IServer> servers = new List<IServer>(_servers.Values);
+				List<string> URLs = new List<string>(_servers.Keys);
+
 				//try to lock other servers
-				foreach (IServer server in _servers.Values)
+				for (int i = 0; i < _servers.Count; i++)
 				{
-					//if we could not adquire the lock
-					if (!server.AcquireRemoteLock(operation_start))
+					IServer server = servers[i];
+
+					try
 					{
-						return false;
+						//if we could not adquire the lock
+						if (!server.AcquireRemoteLock())
+						{
+							return false;
+						}
+					}
+
+					//if server is down
+					catch (System.Net.Sockets.SocketException)
+					{
+						string URL = URLs[i];
+
+						//remove it
+						_servers.Remove(URL);
+						_offlineServers.Add(URL);
+
+						Console.WriteLine("Server at " + URL + " is down");
 					}
 				}
 
+				//got the lock
 				_locked = true;
 
-				//got the lock
 				return true;
 			}
 		}
 
 		public void AcquireLock()
 		{
-			DateTime operation_start = DateTime.Now;
-
-			while (!TryAcquireLock(operation_start))
+			while (!TryAcquireLock())
 			{
 				//Console.WriteLine("waiting for the lock");
-				Thread.Sleep(_rdn.Next(10, 200));
+				Thread.Sleep(_rdn.Next(0, 2000));
 			}
 
-			Console.WriteLine("GOT THE LOCK");
+			Console.WriteLine("ACQUIRED THE LOCK");
 		}
 
 		public void ReleaseLock()
 		{
 			lock (this)
 			{
-				foreach (IServer server in _servers.Values)
+				List<IServer> servers = new List<IServer>(_servers.Values);
+				List<string> URLs = new List<string>(_servers.Keys);
+
+				for (int i = 0; i < _servers.Count; i++)
 				{
-					server.ReleaseRemoteLock();
+					IServer server = servers[i];
+					try
+					{
+						server.ReleaseRemoteLock();
+					}
+
+					//if server is down
+					catch (System.Net.Sockets.SocketException)
+					{
+						string URL = URLs[i];
+
+						//remove it, and continue
+						_servers.Remove(URL);
+						_offlineServers.Add(URL);
+
+						Console.WriteLine("Server at " + URL + " is down");
+					}
 				}
 
 				_locked = false;
 
 				Console.WriteLine("RELEASED THE LOCK");
 
-				Thread.Sleep(500);
+				Thread.Sleep(2000);
 			}
 		}
-
-		
 	}
 }
