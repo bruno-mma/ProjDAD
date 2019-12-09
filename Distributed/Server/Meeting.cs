@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Server
 {
-    class Meeting : IMeeting
+    public class Meeting : IMeeting
     {
         public MeetingData _meetingData;
 
@@ -37,6 +37,11 @@ namespace Server
 		public Meeting(string meeting_topic, string meeting_owner, int min_attendees, int number_of_slots, int number_of_invitees, List<string> slots, List<string> invitees)
 		{
 			this._meetingData = new MeetingData(meeting_topic, meeting_owner, min_attendees, number_of_slots, number_of_invitees, slots, invitees);
+		}
+
+		public Meeting(MeetingData meetingData)
+		{
+			this._meetingData = meetingData;
 		}
 	}
 }

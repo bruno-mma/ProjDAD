@@ -63,26 +63,15 @@ namespace PuppetMaster
 		//key is server id
 		private Dictionary<string, IServer> _servers = new Dictionary<string, IServer>();
 
+		//key is URL
+		private List<string> _serverURLs = new List<string>();
+
 		//Room locations, key is location name
 		private Dictionary<string, Location> _locations = new Dictionary<string, Location>();
-
-		private readonly string clientURLsPath = @"..\..\..\" + "clientURLs.txt";
-		private readonly string serverURLsPath = @"..\..\..\" + "serverURLs.txt";
 
 		public PuppetMaster()
 		{
 			_PCSs.Add("localhost", new PCS.PCS());
-
-			//check if server or clien URL files exist, if so delete them
-			if (File.Exists(clientURLsPath))
-			{
-				File.Delete(clientURLsPath);
-			}
-
-			if (File.Exists(serverURLsPath))
-			{
-				File.Delete(serverURLsPath);
-			}
 		}
 
 		// Delegates for async PuppetMaster operations
@@ -94,11 +83,24 @@ namespace PuppetMaster
 
 		public delegate string RemoteAsyncStatusDelegate();
 
+		public void NewServerURL(string URL)
+		{
+			_serverURLs.Add(URL);
+
+
+			if (_servers.Count != 1)
+			{
+				foreach (IServer server in _servers.Values)
+				{
+					server.UpdateServers(_serverURLs);
+				}
+			}
+		}
 
 		// Async
 		public void StartClient(string name, string user_URL, string server_URL, string script_file)
 		{
-			GetPCS(server_URL).StartClient(name, user_URL, server_URL, script_file);
+			GetPCS(user_URL).StartClient(name, user_URL, server_URL, script_file);
 		}
 
 		// Async
@@ -117,6 +119,8 @@ namespace PuppetMaster
 			_servers[id] = server;
 			server.SetRooms(_locations);
 
+			NewServerURL(server_URL);
+
 			return "PuppetMaster: Connected to server at " + server_URL;
 		}
 
@@ -131,25 +135,27 @@ namespace PuppetMaster
 			_locations[location]._rooms.Add(name, new Room(location, name, capacity));
 		}
 
-		private IPCS GetPCS(string pcs_URL)
+		private IPCS GetPCS(string URL)
 		{
-			string ip = URL.GetIP(pcs_URL);
+			string ip = Interfaces.URL.GetIP(URL);
 
 			if (_PCSs.ContainsKey(ip))
 			{
 				return _PCSs[ip];
 			}
 
-			IPCS pcs = (IPCS)Activator.GetObject(typeof(IPCS), pcs_URL);
+			string PCS_URL = "tcp://" + ip + ":10000/PCS";
+
+			IPCS pcs = (IPCS)Activator.GetObject(typeof(IPCS), PCS_URL);
 
 			//weak check
 			if (pcs == null)
 			{
-				Console.WriteLine("Failed to connect to PCS at " + pcs_URL);
+				Console.WriteLine("Failed to connect to PCS at " + PCS_URL);
 				return null;
 			}
 
-			Console.WriteLine("Connected to PCS at " + pcs_URL);
+			Console.WriteLine("Connected to PCS at " + PCS_URL);
 
 			_PCSs.Add(ip, pcs);
 

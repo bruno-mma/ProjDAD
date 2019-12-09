@@ -1,0 +1,6 @@
+AddRoom meme 10 room1
+Server s1 tcp://localhost:3001/server1 0 0 0
+Server s2 tcp://localhost:3002/server2 0 0 0
+Server s3 tcp://localhost:3003/server3 0 0 0
+Client c1 tcp://localhost:4000/client0 tcp://localhost:3002/server2 empty
+Client c2 tcp://localhost:4001/client1 tcp://localhost:3003/server3 empty

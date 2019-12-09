@@ -1,1 +1,2 @@
-s1 tcp://localhost:3000/server1
+tcp://localhost:3000/server0
+tcp://localhost:3001/server1
