@@ -186,14 +186,23 @@ namespace PuppetMaster
 			{
 				print += "Server: " + kvp.Key + " -> ";
 
-				if (kvp.Value.IsFrozen())
+				try
 				{
-					print += "Frozen";
+					if (kvp.Value.IsFrozen())
+					{
+						print += "Frozen";
+					}
+					else
+					{
+						print += "Running";
+					}
 				}
-				else
+
+				catch (System.Net.Sockets.SocketException)
 				{
-					print += "Running";
+					print += "Crashed";
 				}
+
 
 				print += Environment.NewLine;
 			}

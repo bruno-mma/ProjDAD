@@ -275,8 +275,13 @@ namespace Server
 
 			if (!minimum_attending)
 			{
+				meeting.Canceled = true;
+
+				//update other servers on this change
+				UpdateMeetingDataAllServers(meeting._meetingData);
+
 				_lock.ReleaseLock();
-				return "Error: No location has the minimum number of interested users, cannot close meeting";
+				return "Error: No location has the minimum number of interested users, canceling meeting";
 			}
 
 
@@ -353,11 +358,7 @@ namespace Server
 
 			//update other servers on this change
 			UpdateMeetingDataAllServers(meeting._meetingData);
-
-			foreach (IServer server in _servers.Values)
-			{
-				server.UpdateRoom(selected_room);
-			}
+			UpdateRoomAllServers(selected_room);
 
 			string client_print_message = "Successfully closed meeting " + meeting_topic + " at room " + meeting.SelectedRoom + " at date " + meeting.SelectedDate + ", with users:";
 			client_print_message += Environment.NewLine;
@@ -596,6 +597,26 @@ namespace Server
 				try
 				{
 					servers[i].UpdateMeetingData(meetingData);
+				}
+
+				catch (System.Net.Sockets.SocketException)
+				{
+					//this server is down, remove it
+					ServerDown(URLs[i]);
+				}
+			}
+		}
+
+		public void UpdateRoomAllServers(Room room)
+		{
+			List<IServer> servers = new List<IServer>(_servers.Values);
+			List<string> URLs = new List<string>(_servers.Keys);
+
+			for (int i = 0; i < servers.Count; i++)
+			{
+				try
+				{
+					servers[i].UpdateRoom(room);
 				}
 
 				catch (System.Net.Sockets.SocketException)

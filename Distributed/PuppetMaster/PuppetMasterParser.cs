@@ -204,7 +204,7 @@ namespace PuppetMaster
 			try
 			{
 				//assuming script is inside the solution folder
-				string[] lines = System.IO.File.ReadAllLines(@"..\..\..\" + arguments[1] + ".txt");
+				string[] lines = System.IO.File.ReadAllLines(@"..\..\..\" + arguments[1]);
 
 				foreach (string line in lines)
 				{
@@ -226,7 +226,7 @@ namespace PuppetMaster
 			}
 			catch (System.IO.FileNotFoundException)
 			{
-				Console.Write("PuppetMasterParser: " +  arguments[1] + ".txt File not found.");
+				Console.Write("PuppetMasterParser: " +  arguments[1] + "File not found.");
 			}
 
 			Console.WriteLine(" Reading commands from console");
