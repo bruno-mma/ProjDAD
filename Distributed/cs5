@@ -1,0 +1,30 @@
+wait 1000
+create m5 5 2 0 Lisboa,2020-01-02 Porto,2020-05-05
+wait 10000
+list
+join m1 1 Lisboa,2020-01-01
+wait 3000
+join m2 1 Lisboa,2020-02-02
+wait 3000
+join m3 1 Funchal,2020-03-03
+wait 3000
+join m4 1 Funchal,2020-03-03
+wait 3000
+join m5 1 Coimbra,2020-05-05
+wait 3000
+join m6 1 Lisboa,2020-06-06
+wait 3000
+join m7 1 Lisboa,2020-07-07
+wait 3000
+join m8 1 Lisboa,2020-08-08
+wait 3000
+join m9 1 Lisboa,2020-09-09
+wait 3000
+join m10 1 Lisboa,2020-10-10
+wait 3000
+join m11 1 Lisboa,2020-11-11
+wait 3000
+join m12 1 Lisboa,2020-12-12
+wait 30000
+list
+close m5
